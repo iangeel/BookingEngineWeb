@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const page = document.body.dataset.page;
 
-  if (page === "rooms") {
+  if (page === "home" || page === "rooms") {
     await renderRoomsPage();
   }
 
@@ -87,7 +87,7 @@ function hydrateSearchForms() {
 
 function wireSearchForms() {
   document.querySelectorAll("[data-search-form]").forEach((form) => {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       state.stay = {
         checkin: form.elements.checkin.value,
@@ -95,7 +95,16 @@ function wireSearchForms() {
         guests: Number(form.elements.guests.value)
       };
       saveState();
-      window.location.href = "rooms.html";
+
+      const roomList = document.querySelector("[data-room-list]");
+
+      if (roomList) {
+        await renderRoomsPage();
+        roomList.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+
+      window.location.href = "index.html#available-rooms";
     });
   });
 }
@@ -160,7 +169,7 @@ function renderBookingPage() {
   }
 
   if (!state.room || !state.booking) {
-    window.location.href = "rooms.html";
+    window.location.href = "index.html#available-rooms";
     return;
   }
 
@@ -219,7 +228,7 @@ async function renderConfirmationPage() {
 
   if (!statusNode || !summaryNode || !state.room || !state.booking) {
     if (statusNode) {
-      statusNode.innerHTML = `<div class="empty-state"><h2>No booking selected</h2><p class="note">Start from the rooms page to create a reservation flow.</p></div>`;
+      statusNode.innerHTML = `<div class="empty-state"><h2>No booking selected</h2><p class="note">Start from the main booking page to create a reservation flow.</p></div>`;
     }
     return;
   }
