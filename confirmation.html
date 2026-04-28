@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmation | Aurelia House</title>
+  <meta name="description" content="Review booking status, confirmation details, and payment state.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body data-page="confirmation">
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Aurelia House home">
+        <span class="brand-mark">AH</span>
+        <span>
+          <strong>Aurelia House</strong>
+          <small>Coastal Retreat</small>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="index.html">Stay</a>
+        <a href="rooms.html">Rooms</a>
+        <a href="booking.html">Booking</a>
+        <a href="confirmation.html" aria-current="page">Confirmation</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero compact">
+        <div>
+          <p class="eyebrow">Reservation status</p>
+          <h1>Your booking summary, ready at a glance.</h1>
+          <p class="lede">This confirmation surface supports success, pending, and failed payment states using the future `GET /api/bookings/{id}?token=` backend lookup.</p>
+        </div>
+      </section>
+
+      <section class="confirmation-layout">
+        <article class="surface-card status-card" data-confirmation-status aria-live="polite"></article>
+        <article class="surface-card summary-card" data-confirmation-summary aria-live="polite"></article>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <strong>Aurelia House</strong>
+        <p>Booking status screen designed for direct post-payment retrieval and guest reassurance.</p>
+      </div>
+      <div class="footer-meta">
+        <span>Reference visibility</span>
+        <span>Payment state variants</span>
+        <span>Action-oriented follow-up</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

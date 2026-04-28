@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rooms | Aurelia House</title>
+  <meta name="description" content="Compare refined room options and select the best fit for your stay.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body data-page="rooms">
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Aurelia House home">
+        <span class="brand-mark">AH</span>
+        <span>
+          <strong>Aurelia House</strong>
+          <small>Coastal Retreat</small>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="index.html">Stay</a>
+        <a href="rooms.html" aria-current="page">Rooms</a>
+        <a href="booking.html">Booking</a>
+        <a href="confirmation.html">Confirmation</a>
+      </nav>
+    </header>
+
+    <main>
+
+      <section class="filters-strip surface-card">
+        <div>
+          <strong>Refine your stay</strong>
+          <p>Adjust your dates or guest count to preview future API-driven availability.</p>
+        </div>
+        <form class="compact-search-form" data-search-form>
+          <label>
+            Check-in
+            <input type="date" name="checkin" required>
+          </label>
+          <label>
+            Check-out
+            <input type="date" name="checkout" required>
+          </label>
+          <label>
+            Guests
+            <select name="guests" required>
+              <option value="1">1 guest</option>
+              <option value="2" selected>2 guests</option>
+              <option value="3">3 guests</option>
+              <option value="4">4 guests</option>
+            </select>
+          </label>
+          <button class="button button-primary" type="submit">Update search</button>
+        </form>
+      </section>
+
+      <section class="rooms-grid" data-room-list aria-live="polite"></section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <strong>Aurelia House</strong>
+        <p>Three premium room categories prepared for live availability integration.</p>
+      </div>
+      <div class="footer-meta">
+        <span>Nightly pricing</span>
+        <span>Capacity-aware selection</span>
+        <span>Accessible booking steps</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

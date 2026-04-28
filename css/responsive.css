@@ -1,0 +1,125 @@
+@media (max-width: 699px) {
+  .search-panel {
+    padding: 1.25rem;
+    border-radius: 26px;
+  }
+
+  .booking-search-form {
+    gap: 0.9rem;
+  }
+
+  .booking-search-form label {
+    text-align: left;
+  }
+
+  .booking-search-form input,
+  .booking-search-form select,
+  .booking-search-form .button-search {
+    min-height: 3.35rem;
+  }
+}
+
+@media (min-width: 700px) {
+  .site-shell {
+    width: min(calc(100% - 3rem), var(--max-width));
+    padding-top: 1.5rem;
+  }
+
+  .topbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .booking-search-form,
+  .compact-search-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .booking-search-form {
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .search-intro {
+    text-align: left;
+  }
+
+  .preview-grid,
+  .testimonial-grid,
+  .highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .booking-layout,
+  .confirmation-layout {
+    grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
+  }
+
+  .guest-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guest-form label:nth-child(3),
+  .guest-form label:nth-child(4),
+  .guest-form .trust-banner,
+  .guest-form button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 960px) {
+  .hero,
+  .page-hero,
+  .content-grid,
+  .section-heading,
+  .filters-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero {
+    min-height: 78vh;
+  }
+
+  .booking-search-form {
+    grid-template-columns: minmax(190px, 1.45fr) minmax(190px, 1.45fr) minmax(110px, 0.7fr) auto;
+  }
+
+  .compact-search-form {
+    grid-template-columns: minmax(190px, 1.35fr) minmax(190px, 1.35fr) minmax(110px, 0.7fr);
+    justify-content: center;
+  }
+
+  .compact-search-form .button {
+    grid-column: 3;
+    width: min(100%, 16rem);
+    justify-self: end;
+  }
+
+  .preview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .testimonial-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .highlights-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rooms-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .rooms-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .room-card {
+    grid-template-rows: auto 1fr;
+  }
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Details | Aurelia House</title>
+  <meta name="description" content="Confirm your selected room, enter guest details, and continue toward secure payment.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body data-page="booking">
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Aurelia House home">
+        <span class="brand-mark">AH</span>
+        <span>
+          <strong>Aurelia House</strong>
+          <small>Coastal Retreat</small>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="index.html">Stay</a>
+        <a href="rooms.html">Rooms</a>
+        <a href="booking.html" aria-current="page">Booking</a>
+        <a href="confirmation.html">Confirmation</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero compact">
+        <div>
+          <p class="eyebrow">Guest details</p>
+          <h1>Complete your reservation details.</h1>
+          <p class="lede">The selected room and stay summary remain visible while guests progress toward payment.</p>
+        </div>
+      </section>
+
+      <section class="booking-layout">
+        <aside class="surface-card summary-card" data-booking-summary aria-live="polite"></aside>
+
+        <section class="surface-card form-card">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Primary guest</p>
+              <h2>Traveler information</h2>
+            </div>
+          </div>
+          <form class="guest-form" data-guest-form>
+            <label for="firstName">
+              First name
+              <input id="firstName" name="firstName" type="text" autocomplete="given-name" required>
+            </label>
+            <label for="lastName">
+              Last name
+              <input id="lastName" name="lastName" type="text" autocomplete="family-name" required>
+            </label>
+            <label for="email">
+              Email
+              <input id="email" name="email" type="email" autocomplete="email" required>
+            </label>
+            <label for="guests">
+              Guests
+              <select id="guests" name="guests" required>
+                <option value="1">1 guest</option>
+                <option value="2" selected>2 guests</option>
+                <option value="3">3 guests</option>
+                <option value="4">4 guests</option>
+              </select>
+            </label>
+            <div class="trust-banner">
+              <strong>Why continue?</strong>
+              <p>Your details are prepared for the backend `PATCH /api/bookings/{id}/client?token=` step, followed by payment initiation.</p>
+            </div>
+            <button class="button button-primary button-full" type="submit">Continue to payment</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <strong>Aurelia House</strong>
+        <p>Guest details flow prepared for token-based backend updates and payment handoff.</p>
+      </div>
+      <div class="footer-meta">
+        <span>Accessible form labels</span>
+        <span>Saved progress</span>
+        <span>Confirmation-ready next step</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
