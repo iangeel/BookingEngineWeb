@@ -23,14 +23,13 @@
       </a>
       <nav class="nav" aria-label="Primary">
         <a href="index.html" aria-current="page">Search</a>
-        <a href="rooms.html">Rooms</a>
+        <a href="#available-rooms">Rooms</a>
         <a href="booking.html">Booking</a>
         <a href="confirmation.html">Confirmation</a>
       </nav>
     </header>
 
     <main>
-
       <section class="search-panel surface-card" id="search-panel" aria-labelledby="search-title">
         <div class="search-intro">
           <p class="eyebrow">Booking entry</p>
@@ -58,69 +57,14 @@
         </form>
       </section>
 
-      <section class="content-grid">
-        <article class="surface-card highlight-card">
-          <p class="eyebrow">How this flow works</p>
-          <h2>A cleaner handoff from hotel website to booking engine.</h2>
-          <div class="highlights-grid">
-            <div>
-              <strong>Website to booking</strong>
-              <p>Guests arrive here after clicking a booking CTA on the accommodation's main presentation website.</p>
-            </div>
-            <div>
-              <strong>Availability first</strong>
-              <p>The first job of this app is to capture dates and guest count, then route visitors into room selection.</p>
-            </div>
-            <div>
-              <strong>Plugin-ready flow</strong>
-              <p>The frontend stays focused on booking logic so it can pair cleanly with `BookingOrchestratorAPI` as a reusable product.</p>
-            </div>
-          </div>
-        </article>
-
-        <aside class="surface-card amenity-panel">
-          <p class="eyebrow">Booking steps</p>
-          <ul class="icon-list">
-            <li>Search dates and guests</li>
-            <li>Pick from available rooms</li>
-            <li>Submit guest details</li>
-            <li>Continue to payment and confirmation</li>
-          </ul>
-          <a class="text-link" href="rooms.html">Go to room selection</a>
-        </aside>
-      </section>
-
-      <section class="room-preview">
+      <section class="room-preview" id="available-rooms">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Room selection preview</p>
-            <h2>Guests only need the room details that help them book.</h2>
+            <p class="eyebrow">Available rooms</p>
+            <h2>Select the room that best fits this stay.</h2>
           </div>
-          <a class="button button-secondary" href="rooms.html">Open rooms page</a>
         </div>
-        <div class="preview-grid">
-          <article class="room-teaser surface-card">
-            <img src="assets/room-terrace.svg" alt="Illustrated terrace suite with lounge seating">
-            <div>
-              <h3>Terrace Suite</h3>
-              <p>Focused description with capacity, key amenities, and pricing.</p>
-            </div>
-          </article>
-          <article class="room-teaser surface-card">
-            <img src="assets/room-pavilion.svg" alt="Illustrated pavilion room with warm wood finishes">
-            <div>
-              <h3>Garden Pavilion</h3>
-              <p>Clean comparison content that helps the guest choose quickly.</p>
-            </div>
-          </article>
-          <article class="room-teaser surface-card">
-            <img src="assets/room-signature.svg" alt="Illustrated signature loft with premium seating area">
-            <div>
-              <h3>Signature Loft</h3>
-              <p>Enough detail to support conversion without repeating the property's main marketing site.</p>
-            </div>
-          </article>
-        </div>
+        <section class="rooms-grid" data-room-list aria-live="polite"></section>
       </section>
     </main>
 

@@ -4,8 +4,8 @@ Standalone booking-flow frontend for hospitality businesses, built with semantic
 
 ## Files
 
-- `index.html`: booking-entry page with search, flow explanation, and room preview
-- `rooms.html`: room selection and availability presentation
+- `index.html`: main booking page with search and room selection on one screen
+- `rooms.html`: optional fallback direct-link room listing
 - `booking.html`: guest details form and booking summary
 - `confirmation.html`: booking status and payment outcome variants
 - `css/styles.css`: shared design tokens, layout system, and component styling
@@ -84,6 +84,7 @@ Recommended production setup:
 ## Notes
 
 - The design is mobile-first and optimized for a focused direct-booking journey.
+- The main flow is intentionally consolidated onto `index.html` to reduce friction and make the booking engine easier to plug into different business presentation sites.
 - This app is meant to be linked from a hotel's or property's own presentation website, not replace it.
 - Property storytelling and reviews are intentionally minimized here so the UI stays centered on conversion and booking flow.
 - The confirmation screen includes success, pending, and failed payment variants.
