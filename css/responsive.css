@@ -29,6 +29,10 @@
     grid-template-columns: 1fr auto;
   }
 
+  .header-tools {
+    justify-items: end;
+  }
+
   .booking-search-form,
   .compact-search-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));

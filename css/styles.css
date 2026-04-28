@@ -85,6 +85,11 @@ select {
   margin-bottom: 1.25rem;
 }
 
+.header-tools {
+  display: grid;
+  gap: 0.9rem;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -125,6 +130,23 @@ h3 {
   flex-wrap: wrap;
   gap: 0.75rem 1.25rem;
   color: var(--text-soft);
+}
+
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.language-switcher select {
+  width: auto;
+  min-width: 5rem;
+  padding: 0.7rem 2rem 0.7rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
 }
 
 .nav a[aria-current="page"] {
