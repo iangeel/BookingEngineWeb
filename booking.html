@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Booking Details | Aurelia House</title>
-  <meta name="description" content="Confirm your selected room, enter guest details, and continue toward secure payment.">
+  <title>Detalii rezervare | Booking Engine</title>
+  <meta name="description" content="Confirma camera selectata, completeaza datele oaspetelui si continua catre plata securizata." data-i18n-meta-description>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
@@ -14,27 +14,36 @@
 <body data-page="booking">
   <div class="site-shell">
     <header class="topbar">
-      <a class="brand" href="index.html" aria-label="Aurelia House home">
-        <span class="brand-mark">AH</span>
+      <a class="brand" href="index.html" aria-label="Booking Engine home">
+        <span class="brand-mark">BE</span>
         <span>
-          <strong>Aurelia House</strong>
-          <small>Coastal Retreat</small>
+          <strong data-i18n="brandName">Booking Engine</strong>
+          <small data-i18n="brandTagline">Flux direct de rezervare</small>
         </span>
       </a>
-      <nav class="nav" aria-label="Primary">
-        <a href="index.html">Stay</a>
-        <a href="rooms.html">Rooms</a>
-        <a href="booking.html" aria-current="page">Booking</a>
-        <a href="confirmation.html">Confirmation</a>
-      </nav>
+      <div class="header-tools">
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html" data-i18n="navSearch">Cautare</a>
+          <a href="rooms.html" data-i18n="navRooms">Camere</a>
+          <a href="booking.html" aria-current="page" data-i18n="navBooking">Rezervare</a>
+          <a href="confirmation.html" data-i18n="navConfirmation">Confirmare</a>
+        </nav>
+        <label class="language-switcher">
+          <span data-i18n="languageLabel">Limba</span>
+          <select data-language-switcher aria-label="Language selector">
+            <option value="ro">RO</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <main>
       <section class="page-hero compact">
         <div>
-          <p class="eyebrow">Guest details</p>
-          <h1>Complete your reservation details.</h1>
-          <p class="lede">The selected room and stay summary remain visible while guests progress toward payment.</p>
+          <p class="eyebrow" data-i18n="bookingEyebrow">Detalii oaspete</p>
+          <h1 data-i18n="bookingTitle">Completeaza detaliile rezervarii.</h1>
+          <p class="lede" data-i18n="bookingLead">Camera selectata si rezumatul sederii raman vizibile pe masura ce oaspetele continua catre plata.</p>
         </div>
       </section>
 
@@ -44,37 +53,37 @@
         <section class="surface-card form-card">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Primary guest</p>
-              <h2>Traveler information</h2>
+              <p class="eyebrow" data-i18n="bookingFormEyebrow">Oaspete principal</p>
+              <h2 data-i18n="bookingFormTitle">Informatii calator</h2>
             </div>
           </div>
           <form class="guest-form" data-guest-form>
             <label for="firstName">
-              First name
+              <span data-i18n="labelFirstName">Prenume</span>
               <input id="firstName" name="firstName" type="text" autocomplete="given-name" required>
             </label>
             <label for="lastName">
-              Last name
+              <span data-i18n="labelLastName">Nume</span>
               <input id="lastName" name="lastName" type="text" autocomplete="family-name" required>
             </label>
             <label for="email">
-              Email
+              <span data-i18n="labelEmail">Email</span>
               <input id="email" name="email" type="email" autocomplete="email" required>
             </label>
             <label for="guests">
-              Guests
+              <span data-i18n="labelGuests">Oaspeti</span>
               <select id="guests" name="guests" required>
-                <option value="1">1 guest</option>
-                <option value="2" selected>2 guests</option>
-                <option value="3">3 guests</option>
-                <option value="4">4 guests</option>
+                <option value="1" data-i18n="guests1">1 oaspete</option>
+                <option value="2" selected data-i18n="guests2">2 oaspeti</option>
+                <option value="3" data-i18n="guests3">3 oaspeti</option>
+                <option value="4" data-i18n="guests4">4 oaspeti</option>
               </select>
             </label>
             <div class="trust-banner">
-              <strong>Why continue?</strong>
-              <p>Your details are prepared for the backend `PATCH /api/bookings/{id}/client?token=` step, followed by payment initiation.</p>
+              <strong data-i18n="bookingTrustTitle">De ce sa continui?</strong>
+              <p data-i18n="bookingTrustBody">Datele tale sunt pregatite pentru pasul de backend `PATCH /api/bookings/{id}/client?token=`, urmat de initierea platii.</p>
             </div>
-            <button class="button button-primary button-full" type="submit">Continue to payment</button>
+            <button class="button button-primary button-full" type="submit" data-i18n="buttonContinuePayment">Continua catre plata</button>
           </form>
         </section>
       </section>
@@ -82,13 +91,13 @@
 
     <footer class="footer">
       <div>
-        <strong>Aurelia House</strong>
-        <p>Guest details flow prepared for token-based backend updates and payment handoff.</p>
+        <strong data-i18n="brandName">Booking Engine</strong>
+        <p data-i18n="bookingFooterDescription">Flux de date pentru oaspete pregatit pentru actualizari backend pe baza de token si initierea platii.</p>
       </div>
       <div class="footer-meta">
-        <span>Accessible form labels</span>
-        <span>Saved progress</span>
-        <span>Confirmation-ready next step</span>
+        <span data-i18n="bookingFooterItem1">Etichete accesibile pentru formular</span>
+        <span data-i18n="bookingFooterItem2">Progres salvat</span>
+        <span data-i18n="bookingFooterItem3">Pas urmator pregatit pentru confirmare</span>
       </div>
     </footer>
   </div>

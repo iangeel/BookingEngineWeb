@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Booking Confirmation | Aurelia House</title>
-  <meta name="description" content="Review booking status, confirmation details, and payment state.">
+  <title>Confirmare rezervare | Booking Engine</title>
+  <meta name="description" content="Verifica statusul rezervarii, detaliile de confirmare si starea platii." data-i18n-meta-description>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
@@ -14,27 +14,36 @@
 <body data-page="confirmation">
   <div class="site-shell">
     <header class="topbar">
-      <a class="brand" href="index.html" aria-label="Aurelia House home">
-        <span class="brand-mark">AH</span>
+      <a class="brand" href="index.html" aria-label="Booking Engine home">
+        <span class="brand-mark">BE</span>
         <span>
-          <strong>Aurelia House</strong>
-          <small>Coastal Retreat</small>
+          <strong data-i18n="brandName">Booking Engine</strong>
+          <small data-i18n="brandTagline">Flux direct de rezervare</small>
         </span>
       </a>
-      <nav class="nav" aria-label="Primary">
-        <a href="index.html">Stay</a>
-        <a href="rooms.html">Rooms</a>
-        <a href="booking.html">Booking</a>
-        <a href="confirmation.html" aria-current="page">Confirmation</a>
-      </nav>
+      <div class="header-tools">
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html" data-i18n="navSearch">Cautare</a>
+          <a href="rooms.html" data-i18n="navRooms">Camere</a>
+          <a href="booking.html" data-i18n="navBooking">Rezervare</a>
+          <a href="confirmation.html" aria-current="page" data-i18n="navConfirmation">Confirmare</a>
+        </nav>
+        <label class="language-switcher">
+          <span data-i18n="languageLabel">Limba</span>
+          <select data-language-switcher aria-label="Language selector">
+            <option value="ro">RO</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <main>
       <section class="page-hero compact">
         <div>
-          <p class="eyebrow">Reservation status</p>
-          <h1>Your booking summary, ready at a glance.</h1>
-          <p class="lede">This confirmation surface supports success, pending, and failed payment states using the future `GET /api/bookings/{id}?token=` backend lookup.</p>
+          <p class="eyebrow" data-i18n="confirmationEyebrow">Status rezervare</p>
+          <h1 data-i18n="confirmationTitle">Rezumatul rezervarii tale, disponibil imediat.</h1>
+          <p class="lede" data-i18n="confirmationLead">Aceasta pagina de confirmare suporta starile plata reusita, in asteptare si esuata folosind viitorul lookup `GET /api/bookings/{id}?token=` din backend.</p>
         </div>
       </section>
 
@@ -46,13 +55,13 @@
 
     <footer class="footer">
       <div>
-        <strong>Aurelia House</strong>
-        <p>Booking status screen designed for direct post-payment retrieval and guest reassurance.</p>
+        <strong data-i18n="brandName">Booking Engine</strong>
+        <p data-i18n="confirmationFooterDescription">Ecran de status al rezervarii conceput pentru preluare dupa plata si pentru claritate in fata oaspetelui.</p>
       </div>
       <div class="footer-meta">
-        <span>Reference visibility</span>
-        <span>Payment state variants</span>
-        <span>Action-oriented follow-up</span>
+        <span data-i18n="confirmationFooterItem1">Referinta vizibila</span>
+        <span data-i18n="confirmationFooterItem2">Variante pentru starea platii</span>
+        <span data-i18n="confirmationFooterItem3">Actiuni clare pentru pasul urmator</span>
       </div>
     </footer>
   </div>

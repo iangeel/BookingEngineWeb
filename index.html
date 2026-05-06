@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Direct Booking Engine</title>
-  <meta name="description" content="A focused direct-booking flow for hotels, villas, and accommodation businesses.">
+  <title>Motor de rezervari directe</title>
+  <meta name="description" content="Un flux de rezervare direct, simplu si eficient, pentru hoteluri, vile si alte unitati de cazare." data-i18n-meta-description>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
@@ -17,51 +17,60 @@
       <a class="brand" href="index.html" aria-label="Direct Booking Engine home">
         <span class="brand-mark">BE</span>
         <span>
-          <strong>Booking Engine</strong>
-          <small>Direct reservation flow</small>
+          <strong data-i18n="brandName">Booking Engine</strong>
+          <small data-i18n="brandTagline">Flux direct de rezervare</small>
         </span>
       </a>
-      <nav class="nav" aria-label="Primary">
-        <a href="index.html" aria-current="page">Search</a>
-        <a href="#available-rooms">Rooms</a>
-        <a href="booking.html">Booking</a>
-        <a href="confirmation.html">Confirmation</a>
-      </nav>
+      <div class="header-tools">
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html" aria-current="page" data-i18n="navSearch">Cautare</a>
+          <a href="#available-rooms" data-i18n="navRooms">Camere</a>
+          <a href="booking.html" data-i18n="navBooking">Rezervare</a>
+          <a href="confirmation.html" data-i18n="navConfirmation">Confirmare</a>
+        </nav>
+        <label class="language-switcher">
+          <span data-i18n="languageLabel">Limba</span>
+          <select data-language-switcher aria-label="Language selector">
+            <option value="ro">RO</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <main>
       <section class="search-panel surface-card" id="search-panel" aria-labelledby="search-title">
         <div class="search-intro">
-          <p class="eyebrow">Booking entry</p>
-          <h2 id="search-title">Check availability and continue to room selection</h2>
+          <p class="eyebrow" data-i18n="homeEyebrow">Intrare in rezervare</p>
+          <h2 id="search-title" data-i18n="homeSearchTitle">Verifica disponibilitatea si continua catre selectia camerei</h2>
         </div>
         <form class="booking-search-form" data-search-form>
           <label>
-            Check-in
+            <span data-i18n="labelCheckin">Check-in</span>
             <input type="date" name="checkin" required>
           </label>
           <label>
-            Check-out
+            <span data-i18n="labelCheckout">Check-out</span>
             <input type="date" name="checkout" required>
           </label>
           <label>
-            Guests
+            <span data-i18n="labelGuests">Oaspeti</span>
             <select name="guests" required>
-              <option value="1">1 guest</option>
-              <option value="2" selected>2 guests</option>
-              <option value="3">3 guests</option>
-              <option value="4">4 guests</option>
+              <option value="1" data-i18n="guests1">1 oaspete</option>
+              <option value="2" selected data-i18n="guests2">2 oaspeti</option>
+              <option value="3" data-i18n="guests3">3 oaspeti</option>
+              <option value="4" data-i18n="guests4">4 oaspeti</option>
             </select>
           </label>
-          <button class="button button-primary button-search" type="submit">View availability</button>
+          <button class="button button-primary button-search" type="submit" data-i18n="buttonViewAvailability">Vezi disponibilitatea</button>
         </form>
       </section>
 
       <section class="room-preview" id="available-rooms">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Available rooms</p>
-            <h2>Select the room that best fits this stay.</h2>
+            <p class="eyebrow" data-i18n="homeRoomsEyebrow">Camere disponibile</p>
+            <h2 data-i18n="homeRoomsTitle">Selecteaza camera potrivita pentru aceasta perioada.</h2>
           </div>
         </div>
         <section class="rooms-grid" data-room-list aria-live="polite"></section>
@@ -70,13 +79,13 @@
 
     <footer class="footer">
       <div>
-        <strong>Booking Engine</strong>
-        <p>A booking-focused plugin frontend intended to pair with `BookingOrchestratorAPI` behind hotel and accommodation websites.</p>
+        <strong data-i18n="brandName">Booking Engine</strong>
+        <p data-i18n="footerDescription">Un frontend orientat pe rezervare, gandit sa functioneze impreuna cu `BookingOrchestratorAPI` in spatele site-urilor hotelurilor si unitatilor de cazare.</p>
       </div>
       <div class="footer-meta">
-        <span>Plugin-ready booking flow</span>
-        <span>Backend-driven reservation states</span>
-        <span>Responsive on every device</span>
+        <span data-i18n="footerItem1">Flux de rezervare pregatit pentru integrare</span>
+        <span data-i18n="footerItem2">Stari de rezervare conduse din backend</span>
+        <span data-i18n="footerItem3">Responsive pe orice dispozitiv</span>
       </div>
     </footer>
   </div>

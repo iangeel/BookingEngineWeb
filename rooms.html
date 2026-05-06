@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rooms | Booking Engine</title>
-  <meta name="description" content="Fallback direct link to available rooms inside the booking engine.">
+  <title>Camere | Booking Engine</title>
+  <meta name="description" content="Ruta alternativa catre camerele disponibile din motorul de rezervari." data-i18n-meta-description>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
@@ -17,24 +17,33 @@
       <a class="brand" href="index.html" aria-label="Booking Engine home">
         <span class="brand-mark">BE</span>
         <span>
-          <strong>Booking Engine</strong>
-          <small>Direct reservation flow</small>
+          <strong data-i18n="brandName">Booking Engine</strong>
+          <small data-i18n="brandTagline">Flux direct de rezervare</small>
         </span>
       </a>
-      <nav class="nav" aria-label="Primary">
-        <a href="index.html">Search</a>
-        <a href="rooms.html" aria-current="page">Rooms</a>
-        <a href="booking.html">Booking</a>
-        <a href="confirmation.html">Confirmation</a>
-      </nav>
+      <div class="header-tools">
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html" data-i18n="navSearch">Cautare</a>
+          <a href="rooms.html" aria-current="page" data-i18n="navRooms">Camere</a>
+          <a href="booking.html" data-i18n="navBooking">Rezervare</a>
+          <a href="confirmation.html" data-i18n="navConfirmation">Confirmare</a>
+        </nav>
+        <label class="language-switcher">
+          <span data-i18n="languageLabel">Limba</span>
+          <select data-language-switcher aria-label="Language selector">
+            <option value="ro">RO</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <main>
       <section class="page-hero compact">
         <div>
-          <p class="eyebrow">Room availability</p>
-          <h1>Available rooms for the selected stay.</h1>
-          <p class="lede">This page remains available as a direct fallback, while the main booking flow now starts and continues from the homepage.</p>
+          <p class="eyebrow" data-i18n="roomsEyebrow">Disponibilitate camere</p>
+          <h1 data-i18n="roomsTitle">Camere disponibile pentru perioada selectata.</h1>
+          <p class="lede" data-i18n="roomsLead">Aceasta pagina ramane disponibila ca ruta directa alternativa, in timp ce fluxul principal incepe si continua din pagina principala.</p>
         </div>
       </section>
 
@@ -43,13 +52,13 @@
 
     <footer class="footer">
       <div>
-        <strong>Booking Engine</strong>
-        <p>Fallback room listing screen for guests who arrive directly on the rooms route.</p>
+        <strong data-i18n="brandName">Booking Engine</strong>
+        <p data-i18n="roomsFooterDescription">Ecran alternativ de listare a camerelor pentru oaspetii care ajung direct pe ruta de camere.</p>
       </div>
       <div class="footer-meta">
-        <span>Nightly pricing</span>
-        <span>Capacity-aware selection</span>
-        <span>Accessible booking steps</span>
+        <span data-i18n="roomsFooterItem1">Tarif pe noapte</span>
+        <span data-i18n="roomsFooterItem2">Selectie in functie de capacitate</span>
+        <span data-i18n="roomsFooterItem3">Pasi de rezervare accesibili</span>
       </div>
     </footer>
   </div>
