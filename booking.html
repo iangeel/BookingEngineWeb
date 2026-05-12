@@ -70,14 +70,9 @@
               <span data-i18n="labelEmail">Email</span>
               <input id="email" name="email" type="email" autocomplete="email" required>
             </label>
-            <label for="guests">
+            <label>
               <span data-i18n="labelGuests">Oaspeti</span>
-              <select id="guests" name="guests" required>
-                <option value="1" data-i18n="guests1">1 oaspete</option>
-                <option value="2" selected data-i18n="guests2">2 oaspeti</option>
-                <option value="3" data-i18n="guests3">3 oaspeti</option>
-                <option value="4" data-i18n="guests4">4 oaspeti</option>
-              </select>
+              <div class="readonly-field" data-booking-guests-display aria-live="polite"></div>
             </label>
             <div class="trust-banner">
               <strong data-i18n="bookingTrustTitle">De ce sa continui?</strong>
@@ -102,6 +97,6 @@
     </footer>
   </div>
 
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=20260512b"></script>
 </body>
 </html>

@@ -14,6 +14,7 @@
 
   .booking-search-form input,
   .booking-search-form select,
+  .booking-search-form .guest-stepper,
   .booking-search-form .button-search {
     min-height: 3.35rem;
   }
@@ -42,6 +43,10 @@
   .booking-search-form {
     max-width: none;
     margin-inline: 0;
+  }
+
+  .guest-stepper {
+    min-height: 3.5rem;
   }
 
   .search-intro {
