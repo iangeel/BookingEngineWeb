@@ -1,0 +1,1288 @@
+import {
+  adminLogin,
+  createAdminBooking,
+  createAdminRoom,
+  deleteAdminBooking,
+  deleteAdminRoom,
+  getAdminBooking,
+  getAdminBookings,
+  getAdminRooms,
+  isAdminUnauthorizedError,
+  updateAdminBooking,
+  updateAdminRoom
+} from "./api.js?v=20260512i";
+
+const LANGUAGE_KEY = "booking-engine-language";
+const ADMIN_AUTH_KEY = "booking-engine-admin-auth";
+const ADMIN_WINDOW_NAME_KEY = "bookingEngineAdminAuth";
+const ADMIN_HASH_KEY = "adminAuth";
+const ADMIN_COOKIE_KEY = "bookingEngineAdminAuth";
+const DEFAULT_LANGUAGE = "ro";
+const LOCALES = {
+  ro: "ro-RO",
+  en: "en-US"
+};
+const TRANSLATIONS = {
+  ro: {
+    brandName: "Booking Engine",
+    brandTagline: "Flux direct de rezervare",
+    navPublic: "Frontend public",
+    navAdmin: "Administrare",
+    navAdminPanel: "Panou administrativ",
+    languageLabel: "Limba",
+    loginEyebrow: "Autentificare",
+    loginTitle: "Conectare administrator",
+    labelUsername: "Utilizator",
+    labelPassword: "Parola",
+    buttonLogin: "Conectare",
+    buttonLoggingIn: "Se conecteaza...",
+    adminLoginFooterDescription: "Zona de login pentru administratorii care acceseaza panoul operational.",
+    adminPanelFooterDescription: "Panoul administrativ afiseaza rezervarile si deschide fluxuri de creare sau editare prin ferestre dedicate.",
+    adminLoginFooterItem1: "Autentificare JWT",
+    adminLoginFooterItem2: "Acces securizat",
+    adminLoginFooterItem3: "Intrare catre panoul administrativ",
+    adminPanelFooterItem1: "Autentificare JWT",
+    adminPanelFooterItem2: "Tabel rezervari ordonat dupa startDate",
+    adminPanelFooterItem3: "Ferestre dedicate pentru creare si editare",
+    roomsTab: "Camere",
+    bookingsTab: "Rezervari",
+    sessionUnknown: "Sesiune activa",
+    sessionUntil: "Expira la {value}",
+    buttonRefresh: "Reincarca",
+    buttonLogout: "Deconectare",
+    buttonCreateRoom: "Creeaza camera",
+    buttonCreateBooking: "Creeaza rezervare",
+    buttonSaveRoom: "Salveaza camera",
+    buttonSaveBooking: "Salveaza rezervarea",
+    buttonSavingRoom: "Se salveaza...",
+    buttonSavingBooking: "Se salveaza...",
+    buttonDiscard: "Renunta",
+    buttonEdit: "Editeaza",
+    buttonDelete: "Sterge",
+    buttonLoading: "Se incarca...",
+    bookingsEyebrow: "Rezervari",
+    bookingsTitle: "Administrare rezervari",
+    roomsEyebrow: "Camere",
+    roomEditorCreate: "Creare camera",
+    roomEditorEdit: "Editare camera",
+    bookingEditorCreate: "Creare rezervare",
+    bookingEditorEdit: "Editare rezervare",
+    roomsInventoryTitle: "Camere existente",
+    labelRoomName: "Nume camera",
+    labelCapacity: "Capacitate",
+    labelRate: "Tarif pe noapte",
+    labelDiscount: "Discount",
+    labelPrimaryRoom: "Camera principala",
+    labelIncludedRooms: "Camere incluse",
+    labelGuestCount: "Numar oaspeti",
+    labelStatus: "Status",
+    statusAuto: "Fara modificare",
+    labelStartDate: "Data inceput",
+    labelEndDate: "Data sfarsit",
+    labelClientFirstName: "Prenume client",
+    labelClientLastName: "Nume client",
+    labelClientEmail: "Email client",
+    labelLockedUntil: "Blocat pana la",
+    labelToken: "Token rezervare",
+    roomTableName: "Nume",
+    roomTableCapacity: "Capacitate",
+    roomTableRate: "Tarif",
+    roomTableDiscount: "Discount",
+    roomTableUpdated: "Actualizat",
+    bookingTableRoom: "Camera",
+    bookingTableStay: "Perioada",
+    bookingTableGuests: "Oaspeti",
+    bookingTableStatus: "Status",
+    bookingTableClient: "Client",
+    bookingTableUpdated: "Actualizat",
+    tableActions: "Actiuni",
+    bookingsEmpty: "Nu exista rezervari in acest moment.",
+    roomsEmpty: "Nu exista camere in acest moment.",
+    noRoomOptions: "Nu exista camere disponibile pentru selectie.",
+    roomSelectionHint: "Selecteaza una sau mai multe camere pentru override.",
+    fallbackClient: "Fara client",
+    loginSuccess: "Autentificarea a reusit.",
+    logoutSuccess: "Sesiunea administrativa a fost inchisa.",
+    sessionExpired: "Sesiunea administrativa a expirat. Conecteaza-te din nou.",
+    loadFailed: "Nu am putut incarca datele administrative.",
+    roomsLoadFailed: "Nu am putut incarca camerele.",
+    bookingsLoadFailed: "Nu am putut incarca rezervarile.",
+    roomSaved: "Camera a fost salvata.",
+    roomDeleted: "Camera a fost stearsa.",
+    bookingSaved: "Rezervarea a fost salvata.",
+    bookingDeleted: "Rezervarea a fost stearsa.",
+    roomDeleteConfirm: "Stergi aceasta camera?",
+    bookingDeleteConfirm: "Stergi aceasta rezervare?",
+    validationRoomRequired: "Selecteaza camera principala.",
+    validationDateRange: "Data de final trebuie sa fie dupa data de inceput."
+  },
+  en: {
+    brandName: "Booking Engine",
+    brandTagline: "Direct booking flow",
+    navPublic: "Public frontend",
+    navAdmin: "Admin",
+    navAdminPanel: "Admin panel",
+    languageLabel: "Language",
+    loginEyebrow: "Authentication",
+    loginTitle: "Administrator sign in",
+    labelUsername: "Username",
+    labelPassword: "Password",
+    buttonLogin: "Sign in",
+    buttonLoggingIn: "Signing in...",
+    adminLoginFooterDescription: "Login area for administrators entering the operations panel.",
+    adminPanelFooterDescription: "The admin panel lists bookings and opens create or edit flows in dedicated popups.",
+    adminLoginFooterItem1: "JWT authentication",
+    adminLoginFooterItem2: "Secure access",
+    adminLoginFooterItem3: "Entry to the admin panel",
+    adminPanelFooterItem1: "JWT authentication",
+    adminPanelFooterItem2: "Bookings table ordered by startDate",
+    adminPanelFooterItem3: "Dedicated popups for create and edit",
+    roomsTab: "Rooms",
+    bookingsTab: "Bookings",
+    sessionUnknown: "Active session",
+    sessionUntil: "Expires at {value}",
+    buttonRefresh: "Refresh",
+    buttonLogout: "Logout",
+    buttonCreateRoom: "Create room",
+    buttonCreateBooking: "Create booking",
+    buttonSaveRoom: "Save room",
+    buttonSaveBooking: "Save booking",
+    buttonSavingRoom: "Saving...",
+    buttonSavingBooking: "Saving...",
+    buttonDiscard: "Discard",
+    buttonEdit: "Edit",
+    buttonDelete: "Delete",
+    buttonLoading: "Loading...",
+    bookingsEyebrow: "Bookings",
+    bookingsTitle: "Booking management",
+    roomsEyebrow: "Rooms",
+    roomEditorCreate: "Create room",
+    roomEditorEdit: "Edit room",
+    bookingEditorCreate: "Create booking",
+    bookingEditorEdit: "Edit booking",
+    roomsInventoryTitle: "Existing rooms",
+    labelRoomName: "Room name",
+    labelCapacity: "Capacity",
+    labelRate: "Rate per night",
+    labelDiscount: "Discount",
+    labelPrimaryRoom: "Primary room",
+    labelIncludedRooms: "Included rooms",
+    labelGuestCount: "Guest count",
+    labelStatus: "Status",
+    statusAuto: "No override",
+    labelStartDate: "Start date",
+    labelEndDate: "End date",
+    labelClientFirstName: "Client first name",
+    labelClientLastName: "Client last name",
+    labelClientEmail: "Client email",
+    labelLockedUntil: "Locked until",
+    labelToken: "Booking token",
+    roomTableName: "Name",
+    roomTableCapacity: "Capacity",
+    roomTableRate: "Rate",
+    roomTableDiscount: "Discount",
+    roomTableUpdated: "Updated",
+    bookingTableRoom: "Room",
+    bookingTableStay: "Stay",
+    bookingTableGuests: "Guests",
+    bookingTableStatus: "Status",
+    bookingTableClient: "Client",
+    bookingTableUpdated: "Updated",
+    tableActions: "Actions",
+    bookingsEmpty: "There are no bookings right now.",
+    roomsEmpty: "There are no rooms right now.",
+    noRoomOptions: "There are no rooms available for selection.",
+    roomSelectionHint: "Select one or more rooms for the override.",
+    fallbackClient: "No client",
+    loginSuccess: "Authentication succeeded.",
+    logoutSuccess: "The admin session has been closed.",
+    sessionExpired: "The admin session expired. Please sign in again.",
+    loadFailed: "We couldn't load admin data.",
+    roomsLoadFailed: "We couldn't load rooms.",
+    bookingsLoadFailed: "We couldn't load bookings.",
+    roomSaved: "The room was saved.",
+    roomDeleted: "The room was deleted.",
+    bookingSaved: "The booking was saved.",
+    bookingDeleted: "The booking was deleted.",
+    roomDeleteConfirm: "Delete this room?",
+    bookingDeleteConfirm: "Delete this booking?",
+    validationRoomRequired: "Select the primary room.",
+    validationDateRange: "End date must be after start date."
+  }
+};
+
+const state = {
+  language: loadLanguage(),
+  auth: loadAdminAuth(),
+  rooms: [],
+  bookings: [],
+  selectedBookingId: null,
+  editingRoomId: null,
+  editingBookingId: null,
+  loadingRooms: false,
+  loadingBookings: false
+};
+
+document.addEventListener("DOMContentLoaded", async () => {
+  hydrateAdminAuthFromHash();
+  applyLanguage();
+  wireLanguageSwitcher();
+
+  const page = document.body.dataset.page;
+
+  if (page === "admin-login") {
+    if (hasValidAuth()) {
+      window.location.replace("admin-panel.html");
+      return;
+    }
+
+    wireLoginForm();
+    return;
+  }
+
+  if (page === "admin-panel") {
+    if (!hasAuthToken()) {
+      clearAdminAuth();
+      window.location.replace("admin.html");
+      return;
+    }
+
+    wirePanelActions();
+    wireRoomModal();
+    wireBookingModal();
+    renderPanelState();
+    await loadAdminData();
+  }
+});
+
+function t(key, replacements = {}) {
+  const languagePack = TRANSLATIONS[state.language] || TRANSLATIONS[DEFAULT_LANGUAGE];
+  const template = languagePack[key] || TRANSLATIONS[DEFAULT_LANGUAGE][key] || key;
+
+  return Object.entries(replacements).reduce(
+    (result, [name, value]) => result.replaceAll(`{${name}}`, value),
+    template
+  );
+}
+
+function loadLanguage() {
+  try {
+    return window.localStorage.getItem(LANGUAGE_KEY) || DEFAULT_LANGUAGE;
+  } catch {
+    try {
+      return window.sessionStorage.getItem(LANGUAGE_KEY) || DEFAULT_LANGUAGE;
+    } catch {
+      return DEFAULT_LANGUAGE;
+    }
+  }
+}
+
+function saveLanguage(language) {
+  state.language = language;
+  try {
+    window.localStorage.setItem(LANGUAGE_KEY, language);
+  } catch {
+    try {
+      window.sessionStorage.setItem(LANGUAGE_KEY, language);
+    } catch {
+      // Ignore storage restrictions.
+    }
+  }
+}
+
+function loadAdminAuth() {
+  const fromLocalStorage = readBrowserStorage("localStorage", ADMIN_AUTH_KEY);
+  if (fromLocalStorage) {
+    return normalizeAdminAuth(fromLocalStorage);
+  }
+
+  const fromSessionStorage = readBrowserStorage("sessionStorage", ADMIN_AUTH_KEY);
+  if (fromSessionStorage) {
+    return normalizeAdminAuth(fromSessionStorage);
+  }
+
+  const fromCookie = readCookieAuth(ADMIN_COOKIE_KEY);
+  if (fromCookie) {
+    return normalizeAdminAuth(fromCookie);
+  }
+
+  try {
+    const raw = window.name ? JSON.parse(window.name) : null;
+    return raw?.[ADMIN_WINDOW_NAME_KEY] ? normalizeAdminAuth(raw[ADMIN_WINDOW_NAME_KEY]) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveAdminAuth(auth) {
+  state.auth = normalizeAdminAuth(auth);
+  writeBrowserStorage("localStorage", ADMIN_AUTH_KEY, state.auth);
+  writeBrowserStorage("sessionStorage", ADMIN_AUTH_KEY, state.auth);
+  writeCookieAuth(ADMIN_COOKIE_KEY, state.auth);
+  writeWindowNameAuth(state.auth);
+}
+
+function clearAdminAuth() {
+  state.auth = null;
+  removeBrowserStorage("localStorage", ADMIN_AUTH_KEY);
+  removeBrowserStorage("sessionStorage", ADMIN_AUTH_KEY);
+  removeCookieAuth(ADMIN_COOKIE_KEY);
+  writeWindowNameAuth(null);
+}
+
+function hasValidAuth() {
+  if (!state.auth?.accessToken) {
+    return false;
+  }
+
+  const expiresAtMs = Number(state.auth.expiresAtMs);
+  if (Number.isFinite(expiresAtMs)) {
+    return expiresAtMs > Date.now();
+  }
+
+  const expiresAt = parseBackendDateTime(state.auth.expiresAt);
+  if (Number.isFinite(expiresAt?.getTime())) {
+    return expiresAt.getTime() > Date.now();
+  }
+
+  return true;
+}
+
+function hasAuthToken() {
+  return Boolean(state.auth?.accessToken);
+}
+
+function applyLanguage() {
+  document.documentElement.lang = state.language;
+
+  document.querySelectorAll("[data-admin-i18n]").forEach((node) => {
+    node.textContent = t(node.dataset.adminI18n);
+  });
+
+  document.querySelectorAll("[data-admin-language-switcher]").forEach((select) => {
+    select.value = state.language;
+  });
+
+  const descriptions = {
+    "admin-login": {
+      ro: "Autentificare administrator pentru Booking Engine.",
+      en: "Administrator sign-in for Booking Engine."
+    },
+    "admin-panel": {
+      ro: "Panou administrativ pentru rezervari si camere.",
+      en: "Administrative panel for bookings and rooms."
+    }
+  };
+  const titles = {
+    "admin-login": {
+      ro: "Administrare | Booking Engine",
+      en: "Admin | Booking Engine"
+    },
+    "admin-panel": {
+      ro: "Panou Administrativ | Booking Engine",
+      en: "Admin Panel | Booking Engine"
+    }
+  };
+  const page = document.body.dataset.page;
+  document.title = titles[page]?.[state.language] || titles["admin-login"][DEFAULT_LANGUAGE];
+
+  const metaDescription = document.querySelector("[data-admin-meta-description]");
+  if (metaDescription) {
+    metaDescription.setAttribute("content", descriptions[page]?.[state.language] || descriptions["admin-login"][DEFAULT_LANGUAGE]);
+  }
+
+  if (page === "admin-panel") {
+    renderPanelState();
+  }
+}
+
+function wireLanguageSwitcher() {
+  document.querySelectorAll("[data-admin-language-switcher]").forEach((select) => {
+    select.addEventListener("change", () => {
+      saveLanguage(select.value);
+      applyLanguage();
+    });
+  });
+}
+
+function wireLoginForm() {
+  const form = document.querySelector("[data-admin-login-form]");
+  if (!form) {
+    return;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = form.querySelector('[type="submit"]');
+    const originalLabel = submitButton?.textContent;
+
+    try {
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = t("buttonLoggingIn");
+      }
+
+      const response = await adminLogin({
+        username: form.elements.username.value.trim(),
+        password: form.elements.password.value
+      });
+
+      saveAdminAuth(response.data);
+      setFeedback(t("loginSuccess"), "success");
+      window.location.replace(buildAdminPanelUrl());
+    } catch (error) {
+      setFeedback(error.message || t("loadFailed"), "error");
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalLabel || t("buttonLogin");
+      }
+    }
+  });
+}
+
+function wirePanelActions() {
+  const logoutButton = document.querySelector("[data-admin-logout]");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", () => {
+      clearAdminAuth();
+      window.location.replace("admin.html");
+    });
+  }
+
+  const refreshButton = document.querySelector("[data-admin-refresh]");
+  if (refreshButton) {
+    refreshButton.addEventListener("click", async () => {
+      await loadAdminData();
+    });
+  }
+
+  const createRoomButton = document.querySelector("[data-admin-open-room-modal]");
+  if (createRoomButton) {
+    createRoomButton.addEventListener("click", () => {
+      state.editingRoomId = null;
+      renderRoomModal();
+      openModal("room");
+    });
+  }
+
+  const createBookingButton = document.querySelector("[data-admin-open-booking-modal]");
+  if (createBookingButton) {
+    createBookingButton.addEventListener("click", () => {
+      state.editingBookingId = null;
+      renderBookingModal();
+      openModal("booking");
+    });
+  }
+
+  const editBookingButton = document.querySelector("[data-admin-edit-booking]");
+  if (editBookingButton) {
+    editBookingButton.addEventListener("click", async () => {
+      const bookingId = state.selectedBookingId;
+      if (!bookingId) {
+        return;
+      }
+
+      const response = await runProtected(
+        () => getAdminBooking(state.auth.accessToken, bookingId),
+        t("bookingsLoadFailed")
+      );
+
+      if (!response) {
+        return;
+      }
+
+      upsertBooking(response.data);
+      state.editingBookingId = bookingId;
+      renderBookingModal();
+      openModal("booking");
+    });
+  }
+
+  const deleteBookingButton = document.querySelector("[data-admin-delete-booking]");
+  if (deleteBookingButton) {
+    deleteBookingButton.addEventListener("click", async () => {
+      const bookingId = state.selectedBookingId;
+      if (!bookingId || !window.confirm(t("bookingDeleteConfirm"))) {
+        return;
+      }
+
+      const result = await runProtected(
+        () => deleteAdminBooking(state.auth.accessToken, bookingId),
+        t("bookingsLoadFailed")
+      );
+
+      if (result === null) {
+        return;
+      }
+
+      state.selectedBookingId = null;
+      state.editingBookingId = null;
+      setFeedback(t("bookingDeleted"), "success");
+      await refreshBookings();
+    });
+  }
+}
+
+function wireRoomModal() {
+  document.querySelectorAll("[data-admin-close-room-modal]").forEach((button) => {
+    button.addEventListener("click", closeRoomModal);
+  });
+
+  const discardButton = document.querySelector("[data-admin-cancel-room-edit]");
+  if (discardButton) {
+    discardButton.addEventListener("click", closeRoomModal);
+  }
+
+  const form = document.querySelector("[data-admin-room-form]");
+  if (!form) {
+    return;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = form.querySelector("[data-admin-room-submit]");
+    const originalLabel = submitButton?.textContent;
+    const roomId = form.elements.roomId.value ? Number(form.elements.roomId.value) : null;
+    const payload = {
+      name: form.elements.name.value,
+      capacity: form.elements.capacity.value,
+      ratePerNight: form.elements.ratePerNight.value,
+      discount: form.elements.discount.value
+    };
+
+    try {
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = t("buttonSavingRoom");
+      }
+
+      const result = await runProtected(
+        () => roomId
+          ? updateAdminRoom(state.auth.accessToken, roomId, payload)
+          : createAdminRoom(state.auth.accessToken, payload),
+        t("roomsLoadFailed")
+      );
+
+      if (result === null) {
+        return;
+      }
+
+      setFeedback(t("roomSaved"), "success");
+      state.editingRoomId = null;
+      await refreshRooms();
+      closeRoomModal();
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalLabel || t("buttonSaveRoom");
+      }
+    }
+  });
+}
+
+function wireBookingModal() {
+  document.querySelectorAll("[data-admin-close-booking-modal]").forEach((button) => {
+    button.addEventListener("click", closeBookingModal);
+  });
+
+  const discardButton = document.querySelector("[data-admin-cancel-booking-edit]");
+  if (discardButton) {
+    discardButton.addEventListener("click", closeBookingModal);
+  }
+
+  const form = document.querySelector("[data-admin-booking-form]");
+  if (!form) {
+    return;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = form.querySelector("[data-admin-booking-submit]");
+    const originalLabel = submitButton?.textContent;
+    const bookingId = form.elements.bookingId.value || null;
+    const primaryRoomId = Number(form.elements.roomId.value);
+    const selectedRoomIds = Array.from(form.querySelectorAll('input[name="roomIds"]:checked')).map((input) => Number(input.value));
+
+    if (!Number.isFinite(primaryRoomId)) {
+      setFeedback(t("validationRoomRequired"), "error");
+      return;
+    }
+
+    if (form.elements.endDate.value && form.elements.startDate.value && form.elements.endDate.value < form.elements.startDate.value) {
+      setFeedback(t("validationDateRange"), "error");
+      return;
+    }
+
+    const payload = {
+      roomId: primaryRoomId,
+      roomIds: selectedRoomIds,
+      guestCount: form.elements.guestCount.value,
+      startDate: form.elements.startDate.value,
+      endDate: form.elements.endDate.value,
+      status: form.elements.status.value,
+      clientFirstName: form.elements.clientFirstName.value,
+      clientLastName: form.elements.clientLastName.value,
+      clientEmail: form.elements.clientEmail.value,
+      lockedUntil: form.elements.lockedUntil.value,
+      token: form.elements.token.value.trim()
+    };
+
+    try {
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = t("buttonSavingBooking");
+      }
+
+      const result = await runProtected(
+        () => bookingId
+          ? updateAdminBooking(state.auth.accessToken, bookingId, payload)
+          : createAdminBooking(state.auth.accessToken, payload),
+        t("bookingsLoadFailed")
+      );
+
+      if (result === null) {
+        return;
+      }
+
+      setFeedback(t("bookingSaved"), "success");
+      state.editingBookingId = null;
+      await refreshBookings();
+      closeBookingModal();
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalLabel || t("buttonSaveBooking");
+      }
+    }
+  });
+}
+
+async function loadAdminData() {
+  if (!hasAuthToken()) {
+    clearAdminAuth();
+    window.location.replace("admin.html");
+    return;
+  }
+
+  await Promise.all([refreshRooms(), refreshBookings()]);
+  renderPanelState();
+}
+
+async function runProtected(task, fallbackMessage) {
+  try {
+    return await task();
+  } catch (error) {
+    if (isAdminUnauthorizedError(error)) {
+      clearAdminAuth();
+      window.location.replace("admin.html");
+      return null;
+    }
+
+    setFeedback(error.message || fallbackMessage || t("loadFailed"), "error");
+    return null;
+  }
+}
+
+async function refreshRooms() {
+  state.loadingRooms = true;
+  renderRoomModal();
+
+  const response = await runProtected(
+    () => getAdminRooms(state.auth.accessToken),
+    t("roomsLoadFailed")
+  );
+
+  state.loadingRooms = false;
+
+  if (!response) {
+    renderRoomModal();
+    return false;
+  }
+
+  state.rooms = sortRooms(response.data || []);
+  renderRoomModal();
+  renderPanelState();
+  return true;
+}
+
+async function refreshBookings() {
+  state.loadingBookings = true;
+  renderBookingsTable();
+
+  const response = await runProtected(
+    () => getAdminBookings(state.auth.accessToken),
+    t("bookingsLoadFailed")
+  );
+
+  state.loadingBookings = false;
+
+  if (!response) {
+    renderBookingsTable();
+    return false;
+  }
+
+  state.bookings = sortBookings(response.data || []);
+  if (!state.bookings.find((booking) => booking.id === state.selectedBookingId)) {
+    state.selectedBookingId = null;
+  }
+  renderPanelState();
+  return true;
+}
+
+function renderPanelState() {
+  renderSessionSummary();
+  renderBookingsTable();
+  renderSelectedBookingBar();
+  renderRoomModal();
+  renderBookingModal();
+}
+
+function renderSessionSummary() {
+  const bookingSummary = document.querySelector("[data-admin-booking-summary]");
+  const roomSummary = document.querySelector("[data-admin-room-summary]");
+  const sessionSummary = document.querySelector("[data-admin-session-summary]");
+
+  if (bookingSummary) {
+    bookingSummary.textContent = `${state.bookings.length} ${t("bookingsTab")}`;
+  }
+
+  if (roomSummary) {
+    roomSummary.textContent = `${state.rooms.length} ${t("roomsTab")}`;
+  }
+
+  if (sessionSummary) {
+    sessionSummary.textContent = hasValidAuth()
+      ? t("sessionUntil", { value: formatDateTime(state.auth.expiresAt) })
+      : t("sessionUnknown");
+  }
+}
+
+function renderBookingsTable() {
+  const container = document.querySelector("[data-admin-bookings-list]");
+  if (!container) {
+    return;
+  }
+
+  if (state.loadingBookings) {
+    container.innerHTML = `<div class="empty-state"><p>${t("buttonLoading")}</p></div>`;
+    return;
+  }
+
+  if (!state.bookings.length) {
+    container.innerHTML = `<div class="empty-state"><p>${t("bookingsEmpty")}</p></div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="admin-table admin-bookings-table">
+      <thead>
+        <tr>
+          <th>${t("bookingTableRoom")}</th>
+          <th>${t("bookingTableStay")}</th>
+          <th>${t("bookingTableGuests")}</th>
+          <th>${t("bookingTableStatus")}</th>
+          <th>${t("bookingTableClient")}</th>
+          <th>${t("bookingTableUpdated")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${state.bookings.map((booking) => `
+          <tr class="admin-booking-row${booking.id === state.selectedBookingId ? " is-selected" : ""}" data-booking-row="${booking.id}">
+            <td>${escapeHtml(booking.roomName || booking.roomNames?.join(", ") || "-")}</td>
+            <td>${escapeHtml(formatStayRange(booking.startDate, booking.endDate))}</td>
+            <td>${booking.guestCount ?? "-"}</td>
+            <td><span class="status-pill">${escapeHtml(booking.status || "-")}</span></td>
+            <td>${escapeHtml(formatClientName(booking))}</td>
+            <td>${formatDateTime(booking.updatedAt || booking.createdAt)}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+
+  container.querySelectorAll("[data-booking-row]").forEach((row) => {
+    row.addEventListener("click", () => {
+      state.selectedBookingId = row.dataset.bookingRow;
+      renderSelectedBookingBar();
+      renderBookingsTable();
+    });
+  });
+}
+
+function renderSelectedBookingBar() {
+  const section = document.querySelector("[data-admin-booking-actions]");
+  const meta = document.querySelector("[data-admin-selected-booking-meta]");
+
+  if (!section || !meta) {
+    return;
+  }
+
+  const booking = state.bookings.find((item) => item.id === state.selectedBookingId);
+  section.hidden = !booking;
+
+  if (!booking) {
+    meta.innerHTML = "";
+    return;
+  }
+
+  meta.innerHTML = `
+    <strong>${escapeHtml(booking.roomName || booking.roomNames?.join(", ") || "-")}</strong>
+    <span>${escapeHtml(formatStayRange(booking.startDate, booking.endDate))}</span>
+    <span>${booking.guestCount ?? "-"} ${escapeHtml(t("bookingTableGuests").toLowerCase())}</span>
+    <span>${escapeHtml(booking.status || "-")}</span>
+  `;
+}
+
+function renderRoomModal() {
+  const title = document.querySelector("[data-admin-room-modal-title]");
+  const form = document.querySelector("[data-admin-room-form]");
+  const list = document.querySelector("[data-admin-rooms-list]");
+
+  if (!title || !form || !list) {
+    return;
+  }
+
+  const room = state.rooms.find((item) => item.id === state.editingRoomId);
+
+  title.textContent = room ? t("roomEditorEdit") : t("roomEditorCreate");
+  form.elements.roomId.value = room?.id || "";
+  form.elements.name.value = room?.name || "";
+  form.elements.capacity.value = room?.capacity ?? "";
+  form.elements.ratePerNight.value = room?.ratePerNight ?? "";
+  form.elements.discount.value = room?.discount ?? "";
+
+  if (state.loadingRooms) {
+    list.innerHTML = `<div class="empty-state"><p>${t("buttonLoading")}</p></div>`;
+    return;
+  }
+
+  if (!state.rooms.length) {
+    list.innerHTML = `<div class="empty-state"><p>${t("roomsEmpty")}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = `
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>${t("roomTableName")}</th>
+          <th>${t("roomTableCapacity")}</th>
+          <th>${t("roomTableRate")}</th>
+          <th>${t("roomTableDiscount")}</th>
+          <th>${t("tableActions")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${state.rooms.map((currentRoom) => `
+          <tr>
+            <td>${escapeHtml(currentRoom.name)}</td>
+            <td>${currentRoom.capacity ?? "-"}</td>
+            <td>${formatCurrency(currentRoom.ratePerNight)}</td>
+            <td>${formatPercent(currentRoom.discount)}</td>
+            <td>
+              <div class="admin-row-actions">
+                <button class="button button-success" type="button" data-room-edit="${currentRoom.id}">${t("buttonEdit")}</button>
+                <button class="button button-danger" type="button" data-room-delete="${currentRoom.id}">${t("buttonDelete")}</button>
+              </div>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+
+  list.querySelectorAll("[data-room-edit]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.editingRoomId = Number(button.dataset.roomEdit);
+      renderRoomModal();
+    });
+  });
+
+  list.querySelectorAll("[data-room-delete]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!window.confirm(t("roomDeleteConfirm"))) {
+        return;
+      }
+
+      const roomId = Number(button.dataset.roomDelete);
+      const result = await runProtected(
+        () => deleteAdminRoom(state.auth.accessToken, roomId),
+        t("roomsLoadFailed")
+      );
+
+      if (result === null) {
+        return;
+      }
+
+      if (state.editingRoomId === roomId) {
+        state.editingRoomId = null;
+      }
+
+      setFeedback(t("roomDeleted"), "success");
+      await refreshRooms();
+    });
+  });
+}
+
+function renderBookingModal() {
+  const title = document.querySelector("[data-admin-booking-modal-title]");
+  const form = document.querySelector("[data-admin-booking-form]");
+  const primaryRoomSelect = document.querySelector("[data-admin-primary-room]");
+  const roomOptions = document.querySelector("[data-admin-room-options]");
+
+  if (!title || !form || !primaryRoomSelect || !roomOptions) {
+    return;
+  }
+
+  const booking = state.bookings.find((item) => item.id === state.editingBookingId);
+
+  title.textContent = booking ? t("bookingEditorEdit") : t("bookingEditorCreate");
+  primaryRoomSelect.innerHTML = state.rooms.length
+    ? state.rooms.map((room) => `<option value="${room.id}">${escapeHtml(room.name)}</option>`).join("")
+    : `<option value="">${t("noRoomOptions")}</option>`;
+
+  roomOptions.innerHTML = state.rooms.length
+    ? `
+      <p class="note">${t("roomSelectionHint")}</p>
+      <div class="admin-room-options-grid">
+        ${state.rooms.map((room) => `
+          <label class="admin-room-option">
+            <input type="checkbox" name="roomIds" value="${room.id}">
+            <span>${escapeHtml(room.name)} · ${room.capacity ?? "-"} · ${formatCurrency(room.ratePerNight)}</span>
+          </label>
+        `).join("")}
+      </div>
+    `
+    : `<div class="empty-state"><p>${t("noRoomOptions")}</p></div>`;
+
+  form.elements.bookingId.value = booking?.id || "";
+  form.elements.roomId.value = booking?.roomId || state.rooms[0]?.id || "";
+  form.elements.guestCount.value = booking?.guestCount ?? "";
+  form.elements.startDate.value = booking?.startDate || "";
+  form.elements.endDate.value = booking?.endDate || "";
+  form.elements.status.value = booking?.status || "";
+  form.elements.clientFirstName.value = booking?.clientFirstName || "";
+  form.elements.clientLastName.value = booking?.clientLastName || "";
+  form.elements.clientEmail.value = booking?.clientEmail || "";
+  form.elements.lockedUntil.value = toDateTimeLocalValue(booking?.lockedUntil);
+  form.elements.token.value = booking?.token || "";
+
+  const selectedRoomIds = new Set((booking?.roomIds || []).map(String));
+  roomOptions.querySelectorAll('input[name="roomIds"]').forEach((input) => {
+    input.checked = selectedRoomIds.has(input.value);
+  });
+}
+
+function openModal(type) {
+  const modal = document.querySelector(type === "room" ? "[data-admin-room-modal]" : "[data-admin-booking-modal]");
+  if (modal) {
+    modal.hidden = false;
+  }
+}
+
+function closeRoomModal() {
+  state.editingRoomId = null;
+  const modal = document.querySelector("[data-admin-room-modal]");
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+function closeBookingModal() {
+  state.editingBookingId = null;
+  const modal = document.querySelector("[data-admin-booking-modal]");
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+function setFeedback(message, type = "info") {
+  const node = document.querySelector("[data-admin-feedback]");
+  if (!node) {
+    return;
+  }
+
+  node.hidden = !message;
+  node.className = `admin-feedback is-${type}`;
+  node.textContent = message || "";
+}
+
+function sortBookings(bookings) {
+  return [...bookings].sort((left, right) => {
+    const startCompare = String(left.startDate || "").localeCompare(String(right.startDate || ""));
+    if (startCompare !== 0) {
+      return startCompare;
+    }
+
+    return String(left.id || "").localeCompare(String(right.id || ""));
+  });
+}
+
+function sortRooms(rooms) {
+  return [...rooms].sort((left, right) => Number(left.id || 0) - Number(right.id || 0));
+}
+
+function upsertBooking(booking) {
+  const index = state.bookings.findIndex((item) => item.id === booking.id);
+  if (index === -1) {
+    state.bookings.push(booking);
+  } else {
+    state.bookings.splice(index, 1, booking);
+  }
+  state.bookings = sortBookings(state.bookings);
+}
+
+function formatCurrency(value) {
+  if (value == null || value === "") {
+    return "-";
+  }
+
+  return new Intl.NumberFormat(LOCALES[state.language], {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 2
+  }).format(Number(value));
+}
+
+function formatPercent(value) {
+  if (value == null || value === "") {
+    return "0%";
+  }
+
+  return `${Math.round(Number(value) * 100)}%`;
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = parseBackendDateTime(value);
+  if (!Number.isFinite(date?.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleString(LOCALES[state.language], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function formatStayRange(startDate, endDate) {
+  if (!startDate || !endDate) {
+    return "-";
+  }
+
+  return `${startDate} → ${endDate}`;
+}
+
+function formatClientName(booking) {
+  const fullName = `${booking.clientFirstName || ""} ${booking.clientLastName || ""}`.trim();
+  if (fullName) {
+    return fullName;
+  }
+
+  return booking.clientEmail || t("fallbackClient");
+}
+
+function toDateTimeLocalValue(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = parseBackendDateTime(value);
+  if (!Number.isFinite(date?.getTime())) {
+    return String(value).slice(0, 16);
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function normalizeAdminAuth(auth) {
+  if (!auth?.accessToken) {
+    return null;
+  }
+
+  const expiresAt = parseBackendDateTime(auth.expiresAt);
+  const expiresInSeconds = Number(auth.expiresInSeconds);
+  const expiresAtMs = Number.isFinite(expiresAt?.getTime())
+    ? expiresAt.getTime()
+    : Number.isFinite(expiresInSeconds)
+      ? Date.now() + (expiresInSeconds * 1000)
+      : null;
+
+  return {
+    accessToken: auth.accessToken,
+    tokenType: auth.tokenType || "Bearer",
+    expiresInSeconds: Number.isFinite(expiresInSeconds) ? expiresInSeconds : null,
+    expiresAt: auth.expiresAt || null,
+    expiresAtMs
+  };
+}
+
+function buildAdminPanelUrl() {
+  if (!state.auth?.accessToken) {
+    return "admin-panel.html";
+  }
+
+  const payload = encodeURIComponent(JSON.stringify(state.auth));
+  return `admin-panel.html#${ADMIN_HASH_KEY}=${payload}`;
+}
+
+function readBrowserStorage(storageName, key) {
+  try {
+    const raw = window[storageName]?.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeBrowserStorage(storageName, key, value) {
+  try {
+    window[storageName]?.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore storage restrictions.
+  }
+}
+
+function removeBrowserStorage(storageName, key) {
+  try {
+    window[storageName]?.removeItem(key);
+  } catch {
+    // Ignore storage restrictions.
+  }
+}
+
+function writeWindowNameAuth(auth) {
+  try {
+    const current = window.name ? JSON.parse(window.name) : {};
+    if (auth) {
+      current[ADMIN_WINDOW_NAME_KEY] = auth;
+    } else {
+      delete current[ADMIN_WINDOW_NAME_KEY];
+    }
+    window.name = JSON.stringify(current);
+  } catch {
+    if (auth) {
+      window.name = JSON.stringify({ [ADMIN_WINDOW_NAME_KEY]: auth });
+    }
+  }
+}
+
+function readCookieAuth(name) {
+  try {
+    const cookie = document.cookie
+      .split("; ")
+      .find((part) => part.startsWith(`${name}=`));
+
+    if (!cookie) {
+      return null;
+    }
+
+    const [, rawValue = ""] = cookie.split("=");
+    return JSON.parse(decodeURIComponent(rawValue));
+  } catch {
+    return null;
+  }
+}
+
+function writeCookieAuth(name, auth) {
+  try {
+    const normalized = normalizeAdminAuth(auth);
+    if (!normalized) {
+      removeCookieAuth(name);
+      return;
+    }
+
+    const encoded = encodeURIComponent(JSON.stringify(normalized));
+    const expires = Number.isFinite(Number(normalized.expiresAtMs))
+      ? `; expires=${new Date(Number(normalized.expiresAtMs)).toUTCString()}`
+      : "";
+    document.cookie = `${name}=${encoded}; path=/; SameSite=Lax${expires}`;
+  } catch {
+    // Ignore cookie restrictions.
+  }
+}
+
+function removeCookieAuth(name) {
+  try {
+    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+  } catch {
+    // Ignore cookie restrictions.
+  }
+}
+
+function hydrateAdminAuthFromHash() {
+  if (!window.location.hash || !window.location.hash.includes(`${ADMIN_HASH_KEY}=`)) {
+    return;
+  }
+
+  const hash = window.location.hash.startsWith("#")
+    ? window.location.hash.slice(1)
+    : window.location.hash;
+  const params = new URLSearchParams(hash);
+  const encoded = params.get(ADMIN_HASH_KEY);
+
+  if (!encoded) {
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(decodeURIComponent(encoded));
+    if (parsed?.accessToken) {
+      saveAdminAuth(parsed);
+    }
+  } catch {
+    // Ignore invalid hash payloads.
+  }
+
+  if (window.history?.replaceState) {
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+  } else {
+    window.location.hash = "";
+  }
+}
+
+function parseBackendDateTime(value) {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  const normalized = String(value)
+    .trim()
+    .replace(" ", "T")
+    .replace(/(\.\d{3})\d+$/, "$1");
+
+  let date = new Date(normalized);
+  if (Number.isFinite(date.getTime())) {
+    return date;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(normalized)) {
+    date = new Date(`${normalized}Z`);
+  }
+
+  return date;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}

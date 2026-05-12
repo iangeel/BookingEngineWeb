@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrare | Booking Engine</title>
+  <meta name="description" content="Autentificare administrator pentru Booking Engine." data-admin-meta-description>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body data-page="admin-login">
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Booking Engine home">
+        <span class="brand-mark">BE</span>
+        <span>
+          <strong data-admin-i18n="brandName">Booking Engine</strong>
+          <small data-admin-i18n="brandTagline">Flux direct de rezervare</small>
+        </span>
+      </a>
+      <div class="header-tools">
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html" data-admin-i18n="navPublic">Frontend public</a>
+          <a href="admin.html" aria-current="page" data-admin-i18n="navAdmin">Administrare</a>
+        </nav>
+        <label class="language-switcher">
+          <span data-admin-i18n="languageLabel">Limba</span>
+          <select data-admin-language-switcher aria-label="Language selector">
+            <option value="ro">RO</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <section class="admin-shell surface-card admin-auth-shell">
+        <div class="admin-feedback" data-admin-feedback hidden></div>
+        <section class="admin-auth-panel" data-admin-auth-panel>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow" data-admin-i18n="loginEyebrow">Autentificare</p>
+              <h2 data-admin-i18n="loginTitle">Conectare administrator</h2>
+            </div>
+          </div>
+          <form class="admin-login-form" data-admin-login-form>
+            <label>
+              <span data-admin-i18n="labelUsername">Utilizator</span>
+              <input name="username" type="text" autocomplete="username" required>
+            </label>
+            <label>
+              <span data-admin-i18n="labelPassword">Parola</span>
+              <input name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <button class="button button-primary" type="submit" data-admin-i18n="buttonLogin">Conectare</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <strong data-admin-i18n="brandName">Booking Engine</strong>
+        <p data-admin-i18n="adminLoginFooterDescription">Zona de login pentru administratorii care acceseaza panoul operational.</p>
+      </div>
+      <div class="footer-meta">
+        <span data-admin-i18n="adminLoginFooterItem1">Autentificare JWT</span>
+        <span data-admin-i18n="adminLoginFooterItem2">Acces securizat</span>
+        <span data-admin-i18n="adminLoginFooterItem3">Intrare catre panoul administrativ</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/admin.js?v=20260512i"></script>
+</body>
+</html>

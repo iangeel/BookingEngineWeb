@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panou Administrativ | Booking Engine</title>
+  <meta name="description" content="Panou administrativ pentru rezervari si camere." data-admin-meta-description>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body data-page="admin-panel">
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Booking Engine home">
+        <span class="brand-mark">BE</span>
+        <span>
+          <strong data-admin-i18n="brandName">Booking Engine</strong>
+          <small data-admin-i18n="brandTagline">Flux direct de rezervare</small>
+        </span>
+      </a>
+      <div class="header-tools">
+        <nav class="nav" aria-label="Primary">
+          <a href="index.html" data-admin-i18n="navPublic">Frontend public</a>
+          <a href="admin-panel.html" aria-current="page" data-admin-i18n="navAdminPanel">Panou administrativ</a>
+        </nav>
+        <label class="language-switcher">
+          <span data-admin-i18n="languageLabel">Limba</span>
+          <select data-admin-language-switcher aria-label="Language selector">
+            <option value="ro">RO</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <section class="admin-shell surface-card">
+        <div class="admin-feedback" data-admin-feedback hidden></div>
+
+        <div class="admin-toolbar">
+          <div class="admin-summary">
+            <span class="status-pill" data-admin-booking-summary>0 <span data-admin-i18n="bookingsTab">Rezervari</span></span>
+            <span class="status-pill" data-admin-room-summary>0 <span data-admin-i18n="roomsTab">Camere</span></span>
+            <span class="status-pill" data-admin-session-summary data-admin-i18n="sessionUnknown">Sesiune activa</span>
+          </div>
+          <div class="admin-toolbar-actions">
+            <button class="button button-secondary" type="button" data-admin-open-room-modal data-admin-i18n="buttonCreateRoom">Creeaza camera</button>
+            <button class="button button-secondary" type="button" data-admin-open-booking-modal data-admin-i18n="buttonCreateBooking">Creeaza rezervare</button>
+            <button class="button button-secondary" type="button" data-admin-refresh data-admin-i18n="buttonRefresh">Reincarca</button>
+            <button class="button button-secondary" type="button" data-admin-logout data-admin-i18n="buttonLogout">Deconectare</button>
+          </div>
+        </div>
+
+        <section class="admin-panel">
+          <div class="admin-panel-heading">
+            <div>
+              <p class="eyebrow" data-admin-i18n="bookingsEyebrow">Rezervari</p>
+              <h2 data-admin-i18n="bookingsTitle">Administrare rezervari</h2>
+            </div>
+          </div>
+          <div class="admin-table-wrap" data-admin-bookings-list></div>
+        </section>
+
+        <section class="admin-selection-bar surface-card" data-admin-booking-actions hidden>
+          <div class="admin-selection-meta" data-admin-selected-booking-meta></div>
+          <div class="admin-selection-actions">
+            <button class="button button-success" type="button" data-admin-edit-booking data-admin-i18n="buttonEdit">Editeaza</button>
+            <button class="button button-danger" type="button" data-admin-delete-booking data-admin-i18n="buttonDelete">Sterge</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div class="admin-modal" data-admin-room-modal hidden>
+      <div class="admin-modal-backdrop" data-admin-close-room-modal></div>
+      <div class="admin-modal-card">
+        <div class="admin-modal-header">
+          <div>
+            <p class="eyebrow" data-admin-i18n="roomsEyebrow">Camere</p>
+            <h2 data-admin-room-modal-title data-admin-i18n="roomEditorCreate">Creare camera</h2>
+          </div>
+          <button class="admin-modal-close" type="button" data-admin-close-room-modal aria-label="Close">×</button>
+        </div>
+        <div class="admin-modal-body">
+          <form class="admin-form-grid" data-admin-room-form>
+            <input type="hidden" name="roomId">
+            <label>
+              <span data-admin-i18n="labelRoomName">Nume camera</span>
+              <input name="name" type="text" required>
+            </label>
+            <label>
+              <span data-admin-i18n="labelCapacity">Capacitate</span>
+              <input name="capacity" type="number" min="1" required>
+            </label>
+            <label>
+              <span data-admin-i18n="labelRate">Tarif pe noapte</span>
+              <input name="ratePerNight" type="number" min="0" step="0.01" required>
+            </label>
+            <label>
+              <span data-admin-i18n="labelDiscount">Discount</span>
+              <input name="discount" type="number" min="0" max="1" step="0.01">
+            </label>
+            <div class="admin-inline-actions admin-field-full">
+              <button class="button button-primary" type="submit" data-admin-room-submit data-admin-i18n="buttonSaveRoom">Salveaza camera</button>
+              <button class="button button-secondary" type="button" data-admin-cancel-room-edit data-admin-i18n="buttonDiscard">Renunta</button>
+            </div>
+          </form>
+          <div class="admin-modal-section">
+            <h3 data-admin-i18n="roomsInventoryTitle">Camere existente</h3>
+            <div class="admin-table-wrap" data-admin-rooms-list></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-modal" data-admin-booking-modal hidden>
+      <div class="admin-modal-backdrop" data-admin-close-booking-modal></div>
+      <div class="admin-modal-card">
+        <div class="admin-modal-header">
+          <div>
+            <p class="eyebrow" data-admin-i18n="bookingsEyebrow">Rezervari</p>
+            <h2 data-admin-booking-modal-title data-admin-i18n="bookingEditorCreate">Creare rezervare</h2>
+          </div>
+          <button class="admin-modal-close" type="button" data-admin-close-booking-modal aria-label="Close">×</button>
+        </div>
+        <div class="admin-modal-body">
+          <form class="admin-form-grid" data-admin-booking-form>
+            <input type="hidden" name="bookingId">
+            <label>
+              <span data-admin-i18n="labelPrimaryRoom">Camera principala</span>
+              <select name="roomId" required data-admin-primary-room></select>
+            </label>
+            <div class="admin-field-full">
+              <span class="admin-field-label" data-admin-i18n="labelIncludedRooms">Camere incluse</span>
+              <div class="admin-room-options" data-admin-room-options></div>
+            </div>
+            <label>
+              <span data-admin-i18n="labelGuestCount">Numar oaspeti</span>
+              <input name="guestCount" type="number" min="1">
+            </label>
+            <label>
+              <span data-admin-i18n="labelStatus">Status</span>
+              <select name="status">
+                <option value="" data-admin-i18n="statusAuto">Fara modificare</option>
+                <option value="LOCKED">LOCKED</option>
+                <option value="PENDING">PENDING</option>
+                <option value="CONFIRMED">CONFIRMED</option>
+                <option value="FAILED">FAILED</option>
+                <option value="EXPIRED">EXPIRED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </label>
+            <label>
+              <span data-admin-i18n="labelStartDate">Data inceput</span>
+              <input name="startDate" type="date" required>
+            </label>
+            <label>
+              <span data-admin-i18n="labelEndDate">Data sfarsit</span>
+              <input name="endDate" type="date" required>
+            </label>
+            <label>
+              <span data-admin-i18n="labelClientFirstName">Prenume client</span>
+              <input name="clientFirstName" type="text">
+            </label>
+            <label>
+              <span data-admin-i18n="labelClientLastName">Nume client</span>
+              <input name="clientLastName" type="text">
+            </label>
+            <label class="admin-field-full">
+              <span data-admin-i18n="labelClientEmail">Email client</span>
+              <input name="clientEmail" type="email">
+            </label>
+            <label>
+              <span data-admin-i18n="labelLockedUntil">Blocat pana la</span>
+              <input name="lockedUntil" type="datetime-local">
+            </label>
+            <label>
+              <span data-admin-i18n="labelToken">Token rezervare</span>
+              <input name="token" type="text">
+            </label>
+            <div class="admin-inline-actions admin-field-full">
+              <button class="button button-primary" type="submit" data-admin-booking-submit data-admin-i18n="buttonSaveBooking">Salveaza rezervarea</button>
+              <button class="button button-secondary" type="button" data-admin-cancel-booking-edit data-admin-i18n="buttonDiscard">Renunta</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div>
+        <strong data-admin-i18n="brandName">Booking Engine</strong>
+        <p data-admin-i18n="adminPanelFooterDescription">Panoul administrativ afiseaza rezervarile si deschide fluxuri de creare sau editare prin ferestre dedicate.</p>
+      </div>
+      <div class="footer-meta">
+        <span data-admin-i18n="adminPanelFooterItem1">Autentificare JWT</span>
+        <span data-admin-i18n="adminPanelFooterItem2">Tabel rezervari ordonat dupa startDate</span>
+        <span data-admin-i18n="adminPanelFooterItem3">Ferestre dedicate pentru creare si editare</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/admin.js?v=20260512i"></script>
+</body>
+</html>
