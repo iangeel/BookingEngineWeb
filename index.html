@@ -24,7 +24,7 @@
       <div class="header-tools">
         <nav class="nav" aria-label="Primary">
           <a href="index.html" aria-current="page" data-i18n="navSearch">Cautare</a>
-          <a href="#available-rooms" data-i18n="navRooms">Camere</a>
+          <a href="rooms.html" data-i18n="navRooms">Camere</a>
           <a href="booking.html" data-i18n="navBooking">Rezervare</a>
           <a href="confirmation.html" data-i18n="navConfirmation">Confirmare</a>
         </nav>
@@ -55,25 +55,15 @@
           </label>
           <label>
             <span data-i18n="labelGuests">Oaspeti</span>
-            <select name="guests" required>
-              <option value="1" data-i18n="guests1">1 oaspete</option>
-              <option value="2" selected data-i18n="guests2">2 oaspeti</option>
-              <option value="3" data-i18n="guests3">3 oaspeti</option>
-              <option value="4" data-i18n="guests4">4 oaspeti</option>
-            </select>
+            <div class="guest-stepper" data-guest-stepper>
+              <button type="button" class="guest-stepper-button" data-guest-step="decrease" data-i18n-aria-label="guestCounterDecrease" aria-label="Reduce numarul de oaspeti">-</button>
+              <output class="guest-stepper-value" data-guest-count-display aria-live="polite"></output>
+              <button type="button" class="guest-stepper-button" data-guest-step="increase" data-i18n-aria-label="guestCounterIncrease" aria-label="Creste numarul de oaspeti">+</button>
+              <input type="hidden" name="guests" value="2" required>
+            </div>
           </label>
           <button class="button button-primary button-search" type="submit" data-i18n="buttonViewAvailability">Vezi disponibilitatea</button>
         </form>
-      </section>
-
-      <section class="room-preview" id="available-rooms">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow" data-i18n="homeRoomsEyebrow">Camere disponibile</p>
-            <h2 data-i18n="homeRoomsTitle">Selecteaza camera potrivita pentru aceasta perioada.</h2>
-          </div>
-        </div>
-        <section class="rooms-grid" data-room-list aria-live="polite"></section>
       </section>
     </main>
 
@@ -90,6 +80,6 @@
     </footer>
   </div>
 
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=20260512b"></script>
 </body>
 </html>

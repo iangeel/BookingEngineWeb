@@ -331,7 +331,8 @@ h3 {
 }
 
 input,
-select {
+select,
+.readonly-field {
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -347,6 +348,12 @@ input[type="date"] {
   appearance: none;
   -webkit-appearance: none;
   padding-right: 2.25rem;
+}
+
+.readonly-field {
+  display: flex;
+  align-items: center;
+  min-height: 3.5rem;
 }
 
 input:focus,
@@ -394,6 +401,52 @@ select:focus {
 .booking-search-form {
   max-width: 34rem;
   margin-inline: auto;
+}
+
+.guest-stepper {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem;
+  border-radius: 18px;
+  border: 1px solid rgba(141, 84, 48, 0.18);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.guest-stepper-button {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(234, 211, 184, 0.55);
+  color: var(--accent-strong);
+  font-size: 1.35rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.guest-stepper-button:hover,
+.guest-stepper-button:focus-visible {
+  background: rgba(201, 156, 93, 0.24);
+  transform: translateY(-1px);
+}
+
+.guest-stepper-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.guest-stepper-value {
+  display: block;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .content-grid,

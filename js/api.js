@@ -1,129 +1,157 @@
-const API_BASE_URL = "http://localhost:8080/api";
-
-const mockRooms = [
-  {
-    id: 1,
-    name: "Terrace Suite",
-    capacity: 2,
-    pricePerNight: 420,
-    image: "assets/room-terrace.svg",
-    tagline: "Private terrace, king bed, marble bath",
-    amenities: ["Private terrace", "King bed", "Rain shower", "Sunrise lounge"],
-    availableDates: ["2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10"]
-  },
-  {
-    id: 2,
-    name: "Garden Pavilion",
-    capacity: 3,
-    pricePerNight: 360,
-    image: "assets/room-pavilion.svg",
-    tagline: "Courtyard calm with warm wood details",
-    amenities: ["Garden view", "Breakfast corner", "Reading nook", "Walk-in wardrobe"],
-    availableDates: ["2026-06-06", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11"]
-  },
-  {
-    id: 3,
-    name: "Signature Loft",
-    capacity: 4,
-    pricePerNight: 520,
-    image: "assets/room-signature.svg",
-    tagline: "Open-plan luxury for longer stays",
-    amenities: ["Lounge area", "Soaking tub", "Dining set", "Priority concierge"],
-    availableDates: ["2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11"]
-  }
+const API_BASE_URL = globalThis.BOOKING_API_BASE_URL || "/api";
+const ROOM_IMAGES = [
+  "assets/room-terrace.svg",
+  "assets/room-pavilion.svg",
+  "assets/room-signature.svg"
 ];
 
-const mockDelay = (payload, ms = 240) =>
-  new Promise((resolve) => {
-    window.setTimeout(() => resolve(payload), ms);
+async function request(path, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    },
+    ...options
   });
 
-function createUuid() {
-  if (globalThis.crypto?.randomUUID) {
-    return globalThis.crypto.randomUUID();
+  const raw = await response.text();
+  const data = raw ? safeParseJson(raw) : null;
+
+  if (!response.ok) {
+    const message = data?.message || data?.error || `Request failed with status ${response.status}`;
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
+  return data;
+}
+
+function safeParseJson(raw) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeDate(value) {
+  return typeof value === "string" ? value.slice(0, 10) : value;
+}
+
+function enumerateStayDates(checkin, checkout) {
+  const dates = [];
+  const cursor = new Date(`${checkin}T12:00:00`);
+  const end = new Date(`${checkout}T12:00:00`);
+
+  while (cursor < end) {
+    dates.push(cursor.toISOString().slice(0, 10));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
+}
+
+function coversRequestedStay(availableDates, checkin, checkout) {
+  if (!checkin || !checkout) {
+    return true;
+  }
+
+  const available = new Set((availableDates || []).map(normalizeDate));
+  const requiredDates = enumerateStayDates(checkin, checkout);
+
+  return requiredDates.every((date) => available.has(date));
+}
+
+function toFrontendRoom(room, index) {
+  return {
+    optionId: room.optionId || String(room.id || index),
+    id: room.id,
+    name: room.name,
+    capacity: room.capacity,
+    roomIds: Array.isArray(room.roomIds) ? room.roomIds : room.id ? [room.id] : [],
+    roomNames: Array.isArray(room.roomNames) ? room.roomNames : room.name ? [room.name] : [],
+    roomCount: room.roomCount ?? (room.roomIds?.length || (room.id ? 1 : 0)),
+    totalCapacity: room.totalCapacity ?? room.capacity,
+    totalRatePerNight: room.totalRatePerNight ?? null,
+    packageOption: Boolean(room.packageOption),
+    image: ROOM_IMAGES[index % ROOM_IMAGES.length],
+    availableDates: (room.availableDates || []).map(normalizeDate)
+  };
 }
 
 export async function getAvailability(params = {}) {
   const { checkin, checkout, guests = 1 } = params;
-  const filteredRooms = mockRooms.filter((room) => {
-    const fitsGuests = room.capacity >= Number(guests || 1);
-    const fitsDates =
-      !checkin ||
-      !checkout ||
-      (room.availableDates.includes(checkin) && room.availableDates.includes(checkout));
+  const guestCount = Math.max(1, Number(guests || 1));
+  const availability = await request(`/availability?guests=${encodeURIComponent(guestCount)}`);
 
-    return fitsGuests && fitsDates;
-  });
+  const rooms = availability
+    .map(toFrontendRoom)
+    .filter((room) => coversRequestedStay(room.availableDates, checkin, checkout));
 
-  return mockDelay({
-    endpoint: `${API_BASE_URL}/availability`,
-    request: params,
-    data: filteredRooms
-  });
+  return {
+    endpoint: `${API_BASE_URL}/availability?guests=${guestCount}`,
+    request: {
+      ...params,
+      guests: guestCount
+    },
+    data: rooms
+  };
 }
 
 export async function createBooking(payload) {
-  const selectedRoom = mockRooms.find((room) => room.id === Number(payload.roomId));
-  const bookingId = createUuid();
-  const token = createUuid();
-
-  return mockDelay({
-    endpoint: `${API_BASE_URL}/bookings`,
-    data: {
-      id: bookingId,
-      token,
-      roomId: payload.roomId,
-      roomName: selectedRoom?.name,
+  const roomIds = Array.isArray(payload.roomIds)
+    ? payload.roomIds.map((roomId) => Number(roomId)).filter(Number.isFinite)
+    : [];
+  const data = await request("/bookings", {
+    method: "POST",
+    body: JSON.stringify({
+      roomIds,
+      guestCount: Math.max(1, Number(payload.guestCount || payload.guests || 1)),
       startDate: payload.startDate,
-      endDate: payload.endDate,
-      status: "LOCKED",
-      lockedUntil: new Date(Date.now() + 2 * 60 * 1000).toISOString()
-    }
+      endDate: payload.endDate
+    })
   });
+
+  return {
+    endpoint: `${API_BASE_URL}/bookings`,
+    data
+  };
 }
 
 export async function updateClientData(bookingId, token, payload) {
-  return mockDelay({
-    endpoint: `${API_BASE_URL}/bookings/${bookingId}/client?token=${token}`,
-    data: {
-      id: bookingId,
-      token,
-      status: "PENDING",
-      client: payload
-    }
+  const data = await request(`/bookings/${bookingId}/client?token=${encodeURIComponent(token)}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      email: payload.email
+    })
   });
+
+  return {
+    endpoint: `${API_BASE_URL}/bookings/${bookingId}/client`,
+    data
+  };
 }
 
 export async function initiatePayment(bookingId, token) {
-  return mockDelay({
-    endpoint: `${API_BASE_URL}/bookings/${bookingId}/payment?token=${token}`,
-    data: {
-      bookingId,
-      transactionId: createUuid(),
-      paymentUrl: `confirmation.html?bookingId=${bookingId}&token=${token}&status=success`
-    }
+  const data = await request(`/bookings/${bookingId}/payment?token=${encodeURIComponent(token)}`, {
+    method: "POST"
   });
+
+  return {
+    endpoint: `${API_BASE_URL}/bookings/${bookingId}/payment`,
+    data
+  };
 }
 
-export async function getBookingStatus(bookingId, token, status = "CONFIRMED") {
-  return mockDelay({
-    endpoint: `${API_BASE_URL}/bookings/${bookingId}?token=${token}`,
-    data: {
-      id: bookingId,
-      token,
-      status,
-      paymentStatus: status === "FAILED" ? "FAILED" : status === "PENDING" ? "PENDING" : "SUCCESS"
-    }
-  });
-}
+export async function getBookingStatus(bookingId, token) {
+  const data = await request(`/bookings/${bookingId}?token=${encodeURIComponent(token)}`);
 
-export function getMockRooms() {
-  return [...mockRooms];
+  return {
+    endpoint: `${API_BASE_URL}/bookings/${bookingId}`,
+    data
+  };
 }

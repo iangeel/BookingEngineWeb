@@ -4,30 +4,22 @@ Standalone booking-flow frontend for hospitality businesses, built with semantic
 
 ## Files
 
-- `index.html`: main booking page with search and room selection on one screen
-- `rooms.html`: optional fallback direct-link room listing
+- `index.html`: entry page with stay search only
+- `rooms.html`: availability results page after the guest submits the search
 - `booking.html`: guest details form and booking summary
 - `confirmation.html`: booking status and payment outcome variants
 - `css/styles.css`: shared design tokens, layout system, and component styling
 - `css/responsive.css`: tablet and desktop breakpoints
-- `js/api.js`: mock service layer aligned to backend endpoints
+- `js/api.js`: real API service layer aligned to `BookingOrchestratorAPI`
 - `js/app.js`: page behavior, local state, and booking journey logic
 - `assets/*.svg`: original local illustration assets for hero and room cards
 
 ## How to Run Locally
 
-Because the project uses ES modules, serve it through a simple local HTTP server instead of opening files directly.
-
-### Option 1
+Use the bundled local dev server so the frontend is served on `localhost:3000` and `/api` is proxied to `BookingOrchestratorAPI` on `localhost:8080`.
 
 ```bash
-npx serve .
-```
-
-### Option 2
-
-```bash
-python3 -m http.server 3000
+npm start
 ```
 
 Then open:
@@ -36,30 +28,50 @@ Then open:
 
 ## Backend Integration
 
-The frontend is already organized around these future backend targets:
+The frontend is now wired to the live public backend endpoints exposed by `BookingOrchestratorAPI`:
 
-- `GET /api/availability`
+- `GET /api/availability?guests=`
 - `POST /api/bookings`
 - `PATCH /api/bookings/{id}/client?token=`
 - `POST /api/bookings/{id}/payment?token=`
 - `GET /api/bookings/{id}?token=`
 
-### Suggested next steps
+### Current integration assumptions
 
-1. Set a real `API_BASE_URL` in `js/api.js`, ideally from an environment-specific config file or deployment-time injected script.
-2. Replace the mock data inside `getAvailability()` with a real `fetch()` call that maps `RoomAvailabilityInfo` records into room cards.
-3. Replace `createBooking()` with a `POST /api/bookings` call using:
+1. The backend runs with servlet context path `/api`.
+2. By default, the frontend calls relative URLs such as `/api/availability` and `/api/bookings`.
+3. For local development, this repository now includes a small Node proxy server that forwards `/api/*` to `http://localhost:8080/api/*`.
+
+### Optional API base override
+
+If you need to point the frontend at a different backend origin, define this before loading `js/app.js`:
+
+```html
+<script>
+  window.BOOKING_API_BASE_URL = "http://localhost:8080/api";
+</script>
+```
+
+### Real request flow
+
+1. `GET /api/availability?guests=...`
+   `index.html` submits the selected check-in, check-out, and guest count, fetches availability, stores the result in frontend state, and redirects the guest to `rooms.html`.
+
+2. `POST /api/bookings`
+   Sends:
 
 ```json
 {
   "roomId": 1,
+  "roomIds": [1],
+  "guestCount": 2,
   "startDate": "2026-06-06",
   "endDate": "2026-06-09"
 }
 ```
 
-4. Persist the returned booking `id` and `token` client-side for the next steps in the flow.
-5. On `booking.html`, submit guest details to `PATCH /api/bookings/{id}/client?token=` with:
+3. `PATCH /api/bookings/{id}/client?token=...`
+   Sends:
 
 ```json
 {
@@ -69,8 +81,11 @@ The frontend is already organized around these future backend targets:
 }
 ```
 
-6. Trigger `POST /api/bookings/{id}/payment?token=` after client data is saved and redirect the browser to the returned `paymentUrl`.
-7. On `confirmation.html`, call `GET /api/bookings/{id}?token=` to render the final booking and payment status variant.
+4. `POST /api/bookings/{id}/payment?token=...`
+   Uses the backend-calculated amount and redirects the user to the returned `paymentUrl`.
+
+5. `GET /api/bookings/{id}?token=...`
+   Used on the confirmation page to render the real booking status.
 
 ## Deployment Model
 
@@ -84,8 +99,9 @@ Recommended production setup:
 ## Notes
 
 - The design is mobile-first and optimized for a focused direct-booking journey.
-- The main flow is intentionally consolidated onto `index.html` to reduce friction and make the booking engine easier to plug into different business presentation sites.
+- The main flow now follows a clean handoff: `index.html` for search, `rooms.html` for availability, `booking.html` for guest details, and `confirmation.html` for status.
 - This app is meant to be linked from a hotel's or property's own presentation website, not replace it.
 - Property storytelling and reviews are intentionally minimized here so the UI stays centered on conversion and booking flow.
-- The confirmation screen includes success, pending, and failed payment variants.
-- All current API interactions are mocked to keep this repository frontend-only.
+- The confirmation screen now maps to real backend booking states instead of mock-only variants.
+- The entry page uses a simple `+ / -` guest counter instead of a predefined guest dropdown, with `2` guests as the default.
+- The booking page shows the already selected guest count as a read-only value so it stays aligned with the backend `guestCount` used when the booking was created.
