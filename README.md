@@ -8,10 +8,13 @@ Standalone booking-flow frontend for hospitality businesses, built with semantic
 - `rooms.html`: availability results page after the guest submits the search
 - `booking.html`: guest details form and booking summary
 - `confirmation.html`: booking status and payment outcome variants
+- `admin.html`: administrator login entry point
+- `admin-panel.html`: administrator operations panel for bookings and room actions
 - `css/styles.css`: shared design tokens, layout system, and component styling
 - `css/responsive.css`: tablet and desktop breakpoints
 - `js/api.js`: real API service layer aligned to `BookingOrchestratorAPI`
 - `js/app.js`: page behavior, local state, and booking journey logic
+- `js/admin.js`: administrator login and panel controller
 - `assets/*.svg`: original local illustration assets for hero and room cards
 
 ## How to Run Locally
@@ -25,6 +28,7 @@ npm start
 Then open:
 
 - `http://localhost:3000/index.html`
+- `http://localhost:3000/admin.html`
 
 ## Backend Integration
 
@@ -35,6 +39,9 @@ The frontend is now wired to the live public backend endpoints exposed by `Booki
 - `PATCH /api/bookings/{id}/client?token=`
 - `POST /api/bookings/{id}/payment?token=`
 - `GET /api/bookings/{id}?token=`
+- `POST /api/admin/auth/login`
+- `GET/POST/PUT/DELETE /api/admin/rooms`
+- `GET/POST/PUT/DELETE /api/admin/bookings`
 
 ### Current integration assumptions
 
@@ -87,6 +94,20 @@ If you need to point the frontend at a different backend origin, define this bef
 5. `GET /api/bookings/{id}?token=...`
    Used on the confirmation page to render the real booking status.
 
+### Admin request flow
+
+1. `POST /api/admin/auth/login`
+   `admin.html` authenticates the administrator, stores the JWT response in local storage with its expiry metadata, and redirects to `admin-panel.html`.
+
+2. `GET /api/admin/rooms` and `GET /api/admin/bookings`
+   `admin-panel.html` loads protected data after login and when the operator refreshes the console.
+
+3. `POST /api/admin/rooms`, `PUT /api/admin/rooms/{id}`, `DELETE /api/admin/rooms/{id}`
+   Used by the room popup flow opened from the admin panel.
+
+4. `POST /api/admin/bookings`, `PUT /api/admin/bookings/{id}`, `DELETE /api/admin/bookings/{id}`, `GET /api/admin/bookings/{id}`
+   Used by the bookings-first admin panel, including row selection, edit popup flows, multi-room selection, and manual status/token overrides.
+
 ## Deployment Model
 
 Recommended production setup:
@@ -105,3 +126,4 @@ Recommended production setup:
 - The confirmation screen now maps to real backend booking states instead of mock-only variants.
 - The entry page uses a simple `+ / -` guest counter instead of a predefined guest dropdown, with `2` guests as the default.
 - The booking page shows the already selected guest count as a read-only value so it stays aligned with the backend `guestCount` used when the booking was created.
+- The admin flow is intentionally split into a login entry point and a bookings-first operational panel, with popup create or edit flows instead of large inline editors.

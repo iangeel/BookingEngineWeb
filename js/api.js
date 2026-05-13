@@ -155,3 +155,165 @@ export async function getBookingStatus(bookingId, token) {
     data
   };
 }
+
+function createAdminHeaders(token, headers = {}) {
+  return {
+    Authorization: `Bearer ${token}`,
+    ...headers
+  };
+}
+
+async function adminRequest(path, token, options = {}) {
+  try {
+    return await request(path, {
+      ...options,
+      headers: createAdminHeaders(token, options.headers)
+    });
+  } catch (error) {
+    if (error?.status === 401 || error?.status === 403) {
+      error.isUnauthorized = true;
+    }
+    throw error;
+  }
+}
+
+function normalizeAdminRoomPayload(payload) {
+  return {
+    name: payload.name?.trim() || "",
+    capacity: Number(payload.capacity),
+    ratePerNight: Number(payload.ratePerNight),
+    discount: payload.discount === "" || payload.discount == null ? 0 : Number(payload.discount)
+  };
+}
+
+function normalizeAdminBookingPayload(payload) {
+  const roomIds = Array.isArray(payload.roomIds)
+    ? payload.roomIds.map((roomId) => Number(roomId)).filter(Number.isFinite)
+    : [];
+
+  const roomId = Number(payload.roomId);
+  if (Number.isFinite(roomId) && !roomIds.includes(roomId)) {
+    roomIds.unshift(roomId);
+  }
+
+  return {
+    roomId,
+    roomIds,
+    guestCount: payload.guestCount === "" || payload.guestCount == null ? null : Number(payload.guestCount),
+    startDate: payload.startDate,
+    endDate: payload.endDate,
+    status: payload.status || null,
+    clientFirstName: payload.clientFirstName?.trim() || null,
+    clientLastName: payload.clientLastName?.trim() || null,
+    clientEmail: payload.clientEmail?.trim() || null,
+    lockedUntil: payload.lockedUntil || null,
+    token: payload.token || null
+  };
+}
+
+export function isAdminUnauthorizedError(error) {
+  return Boolean(error?.isUnauthorized || error?.status === 401 || error?.status === 403);
+}
+
+export async function adminLogin(payload) {
+  const data = await request("/admin/auth/login", {
+    method: "POST",
+    body: JSON.stringify({
+      username: payload.username,
+      password: payload.password
+    })
+  });
+
+  return {
+    endpoint: `${API_BASE_URL}/admin/auth/login`,
+    data
+  };
+}
+
+export async function getAdminRooms(token) {
+  const data = await adminRequest("/admin/rooms", token);
+  return {
+    endpoint: `${API_BASE_URL}/admin/rooms`,
+    data
+  };
+}
+
+export async function createAdminRoom(token, payload) {
+  const data = await adminRequest("/admin/rooms", token, {
+    method: "POST",
+    body: JSON.stringify(normalizeAdminRoomPayload(payload))
+  });
+  return {
+    endpoint: `${API_BASE_URL}/admin/rooms`,
+    data
+  };
+}
+
+export async function updateAdminRoom(token, roomId, payload) {
+  const data = await adminRequest(`/admin/rooms/${roomId}`, token, {
+    method: "PUT",
+    body: JSON.stringify(normalizeAdminRoomPayload(payload))
+  });
+  return {
+    endpoint: `${API_BASE_URL}/admin/rooms/${roomId}`,
+    data
+  };
+}
+
+export async function deleteAdminRoom(token, roomId) {
+  const data = await adminRequest(`/admin/rooms/${roomId}`, token, {
+    method: "DELETE"
+  });
+  return {
+    endpoint: `${API_BASE_URL}/admin/rooms/${roomId}`,
+    data
+  };
+}
+
+export async function getAdminBookings(token) {
+  const data = await adminRequest("/admin/bookings", token);
+  return {
+    endpoint: `${API_BASE_URL}/admin/bookings`,
+    data
+  };
+}
+
+export async function getAdminBooking(token, bookingId) {
+  const data = await adminRequest(`/admin/bookings/${bookingId}`, token);
+  return {
+    endpoint: `${API_BASE_URL}/admin/bookings/${bookingId}`,
+    data
+  };
+}
+
+export async function createAdminBooking(token, payload) {
+  const data = await adminRequest("/admin/bookings", token, {
+    method: "POST",
+    body: JSON.stringify(normalizeAdminBookingPayload(payload))
+  });
+  return {
+    endpoint: `${API_BASE_URL}/admin/bookings`,
+    data
+  };
+}
+
+export async function updateAdminBooking(token, bookingId, payload) {
+  const data = await adminRequest(`/admin/bookings/${bookingId}`, token, {
+    method: "PUT",
+    body: JSON.stringify(normalizeAdminBookingPayload(payload))
+  });
+  return {
+    endpoint: `${API_BASE_URL}/admin/bookings/${bookingId}`,
+    data
+  };
+}
+
+export async function deleteAdminBooking(token, bookingId) {
+  const data = await adminRequest(`/admin/bookings/${bookingId}`, token, {
+    method: "DELETE"
+  });
+  return {
+    endpoint: `${API_BASE_URL}/admin/bookings/${bookingId}`,
+    data
+  };
+}

@@ -58,7 +58,10 @@ function serveStatic(response, pathname) {
   }
 
   response.writeHead(200, {
-    "Content-Type": MIME_TYPES[extname(filePath)] || "application/octet-stream"
+    "Content-Type": MIME_TYPES[extname(filePath)] || "application/octet-stream",
+    "Cache-Control": "no-store, no-cache, must-revalidate",
+    Pragma: "no-cache",
+    Expires: "0"
   });
   createReadStream(filePath).pipe(response);
 }

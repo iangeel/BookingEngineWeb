@@ -18,6 +18,14 @@
   .booking-search-form .button-search {
     min-height: 3.35rem;
   }
+
+  .admin-table {
+    min-width: 0;
+  }
+
+  .admin-modal-card {
+    padding: 1rem;
+  }
 }
 
 @media (min-width: 700px) {
@@ -49,6 +57,22 @@
     min-height: 3.5rem;
   }
 
+  .admin-toolbar,
+  .admin-panel-heading {
+    grid-template-columns: 1fr auto;
+  }
+
+  .admin-summary,
+  .admin-toolbar-actions {
+    grid-auto-flow: column;
+    align-items: center;
+  }
+
+  .admin-selection-bar {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
   .search-intro {
     text-align: left;
   }
@@ -75,6 +99,23 @@
   .guest-form .trust-banner,
   .guest-form button {
     grid-column: 1 / -1;
+  }
+
+  .admin-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-form-grid .admin-inline-actions,
+  .admin-form-grid .admin-field-full {
+    grid-column: 1 / -1;
+  }
+
+  .admin-room-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-modal-body {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -120,6 +161,15 @@
 
   .rooms-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-split {
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    align-items: start;
+  }
+
+  .admin-modal-card {
+    padding: 1.4rem;
   }
 }
 
