@@ -445,7 +445,7 @@ function setGuestStepperValue(form, value) {
   guestsInput.value = String(safeValue);
 
   if (display) {
-    display.textContent = formatGuestsCount(safeValue);
+    display.textContent = safeValue;
   }
 
   if (decreaseButton) {
