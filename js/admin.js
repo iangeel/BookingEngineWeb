@@ -10,7 +10,7 @@ import {
   isAdminUnauthorizedError,
   updateAdminBooking,
   updateAdminRoom
-} from "./api.js?v=20260514b";
+} from "./api.js?v=20260514e";
 
 const LANGUAGE_KEY = "booking-engine-language";
 const ADMIN_AUTH_KEY = "booking-engine-admin-auth";
@@ -120,7 +120,8 @@ const TRANSLATIONS = {
     bookingDeleteConfirm: "Stergi aceasta rezervare?",
     validationRoomRequired: "Selecteaza camera principala.",
     validationDateRange: "Data de final trebuie sa fie dupa data de inceput.",
-    validationRatePeriodDateRange: "Perioada tarifara trebuie sa aiba data de final dupa sau egala cu data de inceput."
+    validationRatePeriodDateRange: "Perioada tarifara trebuie sa aiba data de final dupa sau egala cu data de inceput.",
+    validationRoomFormInvalid: "Completeaza corect toate campurile obligatorii pentru camera."
   },
   en: {
     brandName: "Booking Engine",
@@ -219,7 +220,8 @@ const TRANSLATIONS = {
     bookingDeleteConfirm: "Delete this booking?",
     validationRoomRequired: "Select the primary room.",
     validationDateRange: "End date must be after start date.",
-    validationRatePeriodDateRange: "A rate period end date must be on or after the start date."
+    validationRatePeriodDateRange: "A rate period end date must be on or after the start date.",
+    validationRoomFormInvalid: "Complete all required room fields correctly."
   }
 };
 
@@ -579,6 +581,12 @@ function wireRoomModal() {
     const originalLabel = submitButton?.textContent;
     const draft = collectRoomDraftFromForm(form);
     const roomId = draft.roomId ? Number(draft.roomId) : null;
+
+    if (!form.reportValidity()) {
+      const invalidField = Array.from(form.elements).find((field) => typeof field.checkValidity === "function" && !field.checkValidity());
+      setFeedback(invalidField?.validationMessage || t("validationRoomFormInvalid"), "error");
+      return;
+    }
 
     if (draft.ratePeriods.some((period) => period.endDate && period.startDate && period.endDate < period.startDate)) {
       setFeedback(t("validationRatePeriodDateRange"), "error");
