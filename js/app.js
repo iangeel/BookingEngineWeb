@@ -4,7 +4,7 @@ import {
   getBookingStatus,
   initiatePayment,
   updateClientData
-} from "./api.js?v=20260512b";
+} from "./api.js?v=20260514a";
 
 const STORAGE_KEY = "aurelia-booking-flow";
 const LANGUAGE_KEY = "booking-engine-language";
@@ -13,6 +13,63 @@ const LOCALES = {
   ro: "ro-RO",
   en: "en-US"
 };
+const PHONE_COUNTRIES = [
+  {
+    code: "ro",
+    dial: "+40",
+    flag: "🇷🇴",
+    names: {
+      ro: "Romania",
+      en: "Romania"
+    }
+  },
+  {
+    code: "gb",
+    dial: "+44",
+    flag: "🇬🇧",
+    names: {
+      ro: "Regatul Unit",
+      en: "United Kingdom"
+    }
+  },
+  {
+    code: "de",
+    dial: "+49",
+    flag: "🇩🇪",
+    names: {
+      ro: "Germania",
+      en: "Germany"
+    }
+  },
+  {
+    code: "it",
+    dial: "+39",
+    flag: "🇮🇹",
+    names: {
+      ro: "Italia",
+      en: "Italy"
+    }
+  },
+  {
+    code: "fr",
+    dial: "+33",
+    flag: "🇫🇷",
+    names: {
+      ro: "Franta",
+      en: "France"
+    }
+  },
+  {
+    code: "us",
+    dial: "+1",
+    flag: "🇺🇸",
+    names: {
+      ro: "Statele Unite",
+      en: "United States"
+    }
+  }
+];
+const DEFAULT_PHONE_COUNTRY = "ro";
 const TRANSLATIONS = {
   ro: {
     brandName: "Booking Engine",
@@ -32,6 +89,8 @@ const TRANSLATIONS = {
     labelFirstName: "Prenume",
     labelLastName: "Nume",
     labelEmail: "Email",
+    labelPhoneCountry: "Tara / prefix",
+    labelMobilePhoneNumber: "Numar de telefon",
     guests1: "1 oaspete",
     guests2: "2 oaspeti",
     guests3: "3 oaspeti",
@@ -78,6 +137,7 @@ const TRANSLATIONS = {
     preparingRoom: "Se pregateste...",
     roomSelectionError: "Nu am putut pregati aceasta camera acum. Te rugam sa incerci din nou.",
     bookingSubmitError: "Nu am putut continua rezervarea acum. Te rugam sa incerci din nou.",
+    bookingPhoneRequired: "Introdu un numar de telefon valid pentru a continua.",
     emptyFlowTitle: "Nicio rezervare selectata",
     emptyFlowNote: "Porneste din pagina principala de rezervare pentru a crea un flux de rezervare.",
     statusLabel: "Status",
@@ -140,6 +200,8 @@ const TRANSLATIONS = {
     labelFirstName: "First name",
     labelLastName: "Last name",
     labelEmail: "Email",
+    labelPhoneCountry: "Country / dial code",
+    labelMobilePhoneNumber: "Phone number",
     guests1: "1 guest",
     guests2: "2 guests",
     guests3: "3 guests",
@@ -186,6 +248,7 @@ const TRANSLATIONS = {
     preparingRoom: "Preparing...",
     roomSelectionError: "We couldn't prepare this room right now. Please try again.",
     bookingSubmitError: "We couldn't continue the booking right now. Please try again.",
+    bookingPhoneRequired: "Enter a valid phone number to continue.",
     emptyFlowTitle: "No booking selected",
     emptyFlowNote: "Start from the main booking page to create a booking flow.",
     statusLabel: "Status",
@@ -582,8 +645,9 @@ function renderBookingPage() {
   const summaryNode = document.querySelector("[data-booking-summary]");
   const form = document.querySelector("[data-guest-form]");
   const guestsDisplay = document.querySelector("[data-booking-guests-display]");
+  const feedbackNode = document.querySelector("[data-guest-form-feedback]");
 
-  if (!summaryNode || !form || !guestsDisplay) {
+  if (!summaryNode || !form || !guestsDisplay || !feedbackNode) {
     return;
   }
 
@@ -616,25 +680,73 @@ function renderBookingPage() {
     <p class="note">${room.totalRatePerNight != null ? t("pricePerNight") : t("amountPending")}</p>
   `;
 
-  if (state.guest) {
-    form.elements.firstName.value = state.guest.firstName || "";
-    form.elements.lastName.value = state.guest.lastName || "";
-    form.elements.email.value = state.guest.email || "";
-  }
+  const countrySelect = form.elements.phoneCountry;
+  const phoneInput = form.elements.mobilePhoneNumber;
+  const initialGuest = state.guest || {};
+  const initialPhoneValue = initialGuest.mobilePhoneNumber || "";
+  const initialCountry = initialGuest.phoneCountry || detectPhoneCountry(initialPhoneValue) || DEFAULT_PHONE_COUNTRY;
+
+  countrySelect.innerHTML = PHONE_COUNTRIES.map((country) => `
+    <option value="${country.code}">${country.flag} ${country.names[currentLanguage] || country.names[DEFAULT_LANGUAGE]} (${country.dial})</option>
+  `).join("");
+  countrySelect.value = initialCountry;
+  countrySelect.dataset.currentDial = getPhoneCountry(initialCountry).dial;
+
+  form.elements.firstName.value = initialGuest.firstName || "";
+  form.elements.lastName.value = initialGuest.lastName || "";
+  form.elements.email.value = initialGuest.email || "";
+  phoneInput.value = initialPhoneValue || withPhonePrefix(getPhoneCountry(initialCountry).dial);
+
   guestsDisplay.textContent = formatGuestsCount(state.booking.guestCount ?? state.stay.guests ?? 2);
+
+  countrySelect.onchange = () => {
+    const nextCountry = getPhoneCountry(countrySelect.value);
+    applyPhonePrefix(phoneInput, countrySelect.dataset.currentDial, nextCountry.dial);
+    countrySelect.dataset.currentDial = nextCountry.dial;
+    phoneInput.setCustomValidity("");
+    clearFormFeedback(feedbackNode);
+    persistGuestDraft(form);
+  };
+
+  [form.elements.firstName, form.elements.lastName, form.elements.email, phoneInput].forEach((field) => {
+    field.oninput = () => {
+      phoneInput.setCustomValidity("");
+      clearFormFeedback(feedbackNode);
+      persistGuestDraft(form);
+    };
+  });
 
   form.onsubmit = async (event) => {
     event.preventDefault();
+    clearFormFeedback(feedbackNode);
+
+    const selectedCountry = getPhoneCountry(countrySelect.value);
+    const mobilePhoneNumber = phoneInput.value.trim();
+
+    if (!hasPhoneSubscriberNumber(mobilePhoneNumber, selectedCountry.dial)) {
+      phoneInput.setCustomValidity(t("bookingPhoneRequired"));
+    } else {
+      phoneInput.setCustomValidity("");
+    }
+
+    if (!form.reportValidity()) {
+      const invalidField = Array.from(form.elements).find((field) => typeof field.checkValidity === "function" && !field.checkValidity());
+      setFormFeedback(feedbackNode, invalidField?.validationMessage || t("bookingSubmitError"));
+      return;
+    }
 
     const guest = {
       firstName: form.elements.firstName.value.trim(),
       lastName: form.elements.lastName.value.trim(),
       email: form.elements.email.value.trim(),
+      phoneCountry: selectedCountry.code,
+      mobilePhoneNumber,
       guests: Number(state.booking.guestCount ?? state.stay.guests ?? 2)
     };
 
     state.guest = guest;
     state.stay.guests = guest.guests;
+    saveState();
 
     try {
       const bookingUpdate = await updateClientData(state.booking.id, state.booking.token, guest);
@@ -644,10 +756,89 @@ function renderBookingPage() {
       saveState();
       window.location.href = payment.data.paymentUrl;
     } catch (error) {
-      window.alert(error.message || t("bookingSubmitError"));
+      setFormFeedback(feedbackNode, error.message || t("bookingSubmitError"));
       console.error("Booking submit failed", error);
     }
   };
+}
+
+function getPhoneCountry(code) {
+  return PHONE_COUNTRIES.find((country) => country.code === code) || PHONE_COUNTRIES[0];
+}
+
+function detectPhoneCountry(value) {
+  const phone = String(value || "").trim();
+  return PHONE_COUNTRIES.find((country) => phone.startsWith(country.dial))?.code || null;
+}
+
+function withPhonePrefix(prefix) {
+  return `${prefix} `;
+}
+
+function normalizePhoneValue(value) {
+  return String(value || "").replaceAll(/\s+/g, " ").trim();
+}
+
+function hasPhoneSubscriberNumber(value, prefix) {
+  const normalized = normalizePhoneValue(value);
+  if (!normalized) {
+    return false;
+  }
+
+  const compactValue = normalized.replaceAll(/[\s()-]/g, "");
+  const compactPrefix = String(prefix || "").replaceAll(/[\s()-]/g, "");
+
+  return compactValue.length > compactPrefix.length;
+}
+
+function applyPhonePrefix(input, previousPrefix, nextPrefix) {
+  const currentValue = normalizePhoneValue(input.value);
+
+  if (!currentValue || currentValue === previousPrefix) {
+    input.value = withPhonePrefix(nextPrefix);
+    return;
+  }
+
+  const compactValue = currentValue.replaceAll(/[\s()-]/g, "");
+  const compactPrefix = String(previousPrefix || "").replaceAll(/[\s()-]/g, "");
+  if (compactValue === compactPrefix) {
+    input.value = withPhonePrefix(nextPrefix);
+  }
+}
+
+function setFormFeedback(node, message) {
+  if (!node) {
+    return;
+  }
+
+  node.hidden = !message;
+  node.textContent = message || "";
+}
+
+function clearFormFeedback(node) {
+  if (!node) {
+    return;
+  }
+
+  node.hidden = true;
+  node.textContent = "";
+}
+
+function persistGuestDraft(form) {
+  if (!form) {
+    return;
+  }
+
+  state.guest = {
+    ...(state.guest || {}),
+    firstName: form.elements.firstName.value.trim(),
+    lastName: form.elements.lastName.value.trim(),
+    email: form.elements.email.value.trim(),
+    phoneCountry: form.elements.phoneCountry.value,
+    mobilePhoneNumber: form.elements.mobilePhoneNumber.value.trim(),
+    guests: Number(state.booking?.guestCount ?? state.stay.guests ?? 2)
+  };
+  saveState();
 }
 
 async function renderConfirmationPage() {

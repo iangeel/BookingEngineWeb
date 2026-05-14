@@ -1081,11 +1081,16 @@ function formatStayRange(startDate, endDate) {
 
 function formatClientName(booking) {
   const fullName = `${booking.clientFirstName || ""} ${booking.clientLastName || ""}`.trim();
+  const contactParts = [booking.clientEmail, booking.clientPhoneNumber].filter(Boolean);
+  if (fullName && contactParts.length) {
+    return `${fullName} · ${contactParts.join(" · ")}`;
+  }
+
   if (fullName) {
     return fullName;
   }
 
-  return booking.clientEmail || t("fallbackClient");
+  return contactParts[0] || t("fallbackClient");
 }
 
 function toDateTimeLocalValue(value) {

@@ -330,6 +330,19 @@ h3 {
   min-width: 0;
 }
 
+.phone-field-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.phone-field-grid > label {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 input,
 select,
 .readonly-field {
@@ -360,6 +373,20 @@ input:focus,
 select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(165, 106, 63, 0.12);
+}
+
+.form-feedback {
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(169, 77, 63, 0.2);
+  background: rgba(169, 77, 63, 0.08);
+  color: var(--danger);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.form-feedback[hidden] {
+  display: none;
 }
 
 .button {

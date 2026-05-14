@@ -94,11 +94,16 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .guest-form label:nth-child(3),
-  .guest-form label:nth-child(4),
+  .guest-form .guest-form-field-wide,
+  .guest-form .phone-field-grid,
+  .guest-form .form-feedback,
   .guest-form .trust-banner,
   .guest-form button {
     grid-column: 1 / -1;
+  }
+
+  .phone-field-grid {
+    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.2fr);
   }
 
   .admin-form-grid {
