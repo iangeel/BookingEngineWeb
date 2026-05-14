@@ -66,14 +66,25 @@
               <span data-i18n="labelLastName">Nume</span>
               <input id="lastName" name="lastName" type="text" autocomplete="family-name" required>
             </label>
-            <label for="email">
+            <label class="guest-form-field-wide" for="email">
               <span data-i18n="labelEmail">Email</span>
               <input id="email" name="email" type="email" autocomplete="email" required>
             </label>
-            <label>
+            <div class="phone-field-grid guest-form-field-wide">
+              <label for="phoneCountry">
+                <span data-i18n="labelPhoneCountry">Tara / prefix</span>
+                <select id="phoneCountry" name="phoneCountry" data-phone-country autocomplete="country-name" required></select>
+              </label>
+              <label for="mobilePhoneNumber">
+                <span data-i18n="labelMobilePhoneNumber">Numar de telefon</span>
+                <input id="mobilePhoneNumber" name="mobilePhoneNumber" type="tel" autocomplete="tel" inputmode="tel" required>
+              </label>
+            </div>
+            <label class="guest-form-field-wide">
               <span data-i18n="labelGuests">Oaspeti</span>
               <div class="readonly-field" data-booking-guests-display aria-live="polite"></div>
             </label>
+            <div class="form-feedback guest-form-field-wide" data-guest-form-feedback role="alert" hidden></div>
             <div class="trust-banner">
               <strong data-i18n="bookingTrustTitle">De ce sa continui?</strong>
               <p data-i18n="bookingTrustBody">Datele tale sunt pregatite pentru pasul de backend `PATCH /api/bookings/{id}/client?token=`, urmat de initierea platii.</p>
@@ -97,6 +108,6 @@
     </footer>
   </div>
 
-  <script type="module" src="js/app.js?v=20260512b"></script>
+  <script type="module" src="js/app.js?v=20260514a"></script>
 </body>
 </html>

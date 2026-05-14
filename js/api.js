@@ -126,7 +126,8 @@ export async function updateClientData(bookingId, token, payload) {
     body: JSON.stringify({
       firstName: payload.firstName,
       lastName: payload.lastName,
-      email: payload.email
+      email: payload.email,
+      mobilePhoneNumber: payload.mobilePhoneNumber
     })
   });
 
