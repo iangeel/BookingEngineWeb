@@ -6,12 +6,14 @@ const ROOM_IMAGES = [
 ];
 
 async function request(path, options = {}) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    },
-    ...options
+    ...options,
+    headers
   });
 
   const raw = await response.text();
@@ -40,30 +42,6 @@ function normalizeDate(value) {
   return typeof value === "string" ? value.slice(0, 10) : value;
 }
 
-function enumerateStayDates(checkin, checkout) {
-  const dates = [];
-  const cursor = new Date(`${checkin}T12:00:00`);
-  const end = new Date(`${checkout}T12:00:00`);
-
-  while (cursor < end) {
-    dates.push(cursor.toISOString().slice(0, 10));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  return dates;
-}
-
-function coversRequestedStay(availableDates, checkin, checkout) {
-  if (!checkin || !checkout) {
-    return true;
-  }
-
-  const available = new Set((availableDates || []).map(normalizeDate));
-  const requiredDates = enumerateStayDates(checkin, checkout);
-
-  return requiredDates.every((date) => available.has(date));
-}
-
 function toFrontendRoom(room, index) {
   return {
     optionId: room.optionId || String(room.id || index),
@@ -74,7 +52,7 @@ function toFrontendRoom(room, index) {
     roomNames: Array.isArray(room.roomNames) ? room.roomNames : room.name ? [room.name] : [],
     roomCount: room.roomCount ?? (room.roomIds?.length || (room.id ? 1 : 0)),
     totalCapacity: room.totalCapacity ?? room.capacity,
-    totalRatePerNight: room.totalRatePerNight ?? null,
+    totalRateForStay: room.totalRateForStay ?? room.totalRatePerNight ?? null,
     packageOption: Boolean(room.packageOption),
     image: ROOM_IMAGES[index % ROOM_IMAGES.length],
     availableDates: (room.availableDates || []).map(normalizeDate)
@@ -84,14 +62,17 @@ function toFrontendRoom(room, index) {
 export async function getAvailability(params = {}) {
   const { checkin, checkout, guests = 1 } = params;
   const guestCount = Math.max(1, Number(guests || 1));
-  const availability = await request(`/availability?guests=${encodeURIComponent(guestCount)}`);
+  const search = new URLSearchParams({
+    guests: String(guestCount),
+    startDate: checkin,
+    endDate: checkout
+  });
+  const availability = await request(`/availability?${search.toString()}`);
 
-  const rooms = availability
-    .map(toFrontendRoom)
-    .filter((room) => coversRequestedStay(room.availableDates, checkin, checkout));
+  const rooms = availability.map(toFrontendRoom);
 
   return {
-    endpoint: `${API_BASE_URL}/availability?guests=${guestCount}`,
+    endpoint: `${API_BASE_URL}/availability?${search.toString()}`,
     request: {
       ...params,
       guests: guestCount
@@ -183,7 +164,14 @@ function normalizeAdminRoomPayload(payload) {
     name: payload.name?.trim() || "",
     capacity: Number(payload.capacity),
     ratePerNight: Number(payload.ratePerNight),
-    discount: payload.discount === "" || payload.discount == null ? 0 : Number(payload.discount)
+    discount: payload.discount === "" || payload.discount == null ? 0 : Number(payload.discount),
+    ratePeriods: Array.isArray(payload.ratePeriods)
+      ? payload.ratePeriods.map((period) => ({
+        startDate: period.startDate,
+        endDate: period.endDate,
+        ratePerNight: Number(period.ratePerNight)
+      }))
+      : []
   };
 }
 

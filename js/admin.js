@@ -10,7 +10,7 @@ import {
   isAdminUnauthorizedError,
   updateAdminBooking,
   updateAdminRoom
-} from "./api.js?v=20260512i";
+} from "./api.js?v=20260514e";
 
 const LANGUAGE_KEY = "booking-engine-language";
 const ADMIN_AUTH_KEY = "booking-engine-admin-auth";
@@ -53,6 +53,8 @@ const TRANSLATIONS = {
     buttonCreateRoom: "Creeaza camera",
     buttonCreateBooking: "Creeaza rezervare",
     buttonSaveRoom: "Salveaza camera",
+    buttonAddRatePeriod: "Adauga perioada",
+    buttonRemoveRatePeriod: "Sterge perioada",
     buttonSaveBooking: "Salveaza rezervarea",
     buttonSavingRoom: "Se salveaza...",
     buttonSavingBooking: "Se salveaza...",
@@ -68,10 +70,13 @@ const TRANSLATIONS = {
     bookingEditorCreate: "Creare rezervare",
     bookingEditorEdit: "Editare rezervare",
     roomsInventoryTitle: "Camere existente",
+    roomRatePeriodsEmpty: "Foloseste tariful de baza pentru toate datele.",
+    roomRatePeriodsConfigured: "Perioade configurate",
     labelRoomName: "Nume camera",
     labelCapacity: "Capacitate",
     labelRate: "Tarif pe noapte",
     labelDiscount: "Discount",
+    labelRatePeriods: "Perioade tarifare",
     labelPrimaryRoom: "Camera principala",
     labelIncludedRooms: "Camere incluse",
     labelGuestCount: "Numar oaspeti",
@@ -114,7 +119,9 @@ const TRANSLATIONS = {
     roomDeleteConfirm: "Stergi aceasta camera?",
     bookingDeleteConfirm: "Stergi aceasta rezervare?",
     validationRoomRequired: "Selecteaza camera principala.",
-    validationDateRange: "Data de final trebuie sa fie dupa data de inceput."
+    validationDateRange: "Data de final trebuie sa fie dupa data de inceput.",
+    validationRatePeriodDateRange: "Perioada tarifara trebuie sa aiba data de final dupa sau egala cu data de inceput.",
+    validationRoomFormInvalid: "Completeaza corect toate campurile obligatorii pentru camera."
   },
   en: {
     brandName: "Booking Engine",
@@ -146,6 +153,8 @@ const TRANSLATIONS = {
     buttonCreateRoom: "Create room",
     buttonCreateBooking: "Create booking",
     buttonSaveRoom: "Save room",
+    buttonAddRatePeriod: "Add period",
+    buttonRemoveRatePeriod: "Remove period",
     buttonSaveBooking: "Save booking",
     buttonSavingRoom: "Saving...",
     buttonSavingBooking: "Saving...",
@@ -161,10 +170,13 @@ const TRANSLATIONS = {
     bookingEditorCreate: "Create booking",
     bookingEditorEdit: "Edit booking",
     roomsInventoryTitle: "Existing rooms",
+    roomRatePeriodsEmpty: "Use the base rate for every date.",
+    roomRatePeriodsConfigured: "Configured periods",
     labelRoomName: "Room name",
     labelCapacity: "Capacity",
     labelRate: "Rate per night",
     labelDiscount: "Discount",
+    labelRatePeriods: "Rate periods",
     labelPrimaryRoom: "Primary room",
     labelIncludedRooms: "Included rooms",
     labelGuestCount: "Guest count",
@@ -207,7 +219,9 @@ const TRANSLATIONS = {
     roomDeleteConfirm: "Delete this room?",
     bookingDeleteConfirm: "Delete this booking?",
     validationRoomRequired: "Select the primary room.",
-    validationDateRange: "End date must be after start date."
+    validationDateRange: "End date must be after start date.",
+    validationRatePeriodDateRange: "A rate period end date must be on or after the start date.",
+    validationRoomFormInvalid: "Complete all required room fields correctly."
   }
 };
 
@@ -218,6 +232,7 @@ const state = {
   bookings: [],
   selectedBookingId: null,
   editingRoomId: null,
+  roomDraft: null,
   editingBookingId: null,
   loadingRooms: false,
   loadingBookings: false
@@ -460,6 +475,7 @@ function wirePanelActions() {
   if (createRoomButton) {
     createRoomButton.addEventListener("click", () => {
       state.editingRoomId = null;
+      state.roomDraft = createRoomDraft();
       renderRoomModal();
       openModal("room");
     });
@@ -538,17 +554,44 @@ function wireRoomModal() {
     return;
   }
 
+  form.addEventListener("input", () => {
+    state.roomDraft = collectRoomDraftFromForm(form);
+  });
+
+  form.addEventListener("click", (event) => {
+    const addButton = event.target.closest("[data-admin-add-rate-period]");
+    if (addButton) {
+      state.roomDraft = collectRoomDraftFromForm(form);
+      state.roomDraft.ratePeriods.push(createRatePeriodDraft());
+      renderRoomModal();
+      return;
+    }
+
+    const removeButton = event.target.closest("[data-admin-remove-rate-period]");
+    if (removeButton) {
+      state.roomDraft = collectRoomDraftFromForm(form);
+      state.roomDraft.ratePeriods.splice(Number(removeButton.dataset.adminRemoveRatePeriod), 1);
+      renderRoomModal();
+    }
+  });
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitButton = form.querySelector("[data-admin-room-submit]");
     const originalLabel = submitButton?.textContent;
-    const roomId = form.elements.roomId.value ? Number(form.elements.roomId.value) : null;
-    const payload = {
-      name: form.elements.name.value,
-      capacity: form.elements.capacity.value,
-      ratePerNight: form.elements.ratePerNight.value,
-      discount: form.elements.discount.value
-    };
+    const draft = collectRoomDraftFromForm(form);
+    const roomId = draft.roomId ? Number(draft.roomId) : null;
+
+    if (!form.reportValidity()) {
+      const invalidField = Array.from(form.elements).find((field) => typeof field.checkValidity === "function" && !field.checkValidity());
+      setFeedback(invalidField?.validationMessage || t("validationRoomFormInvalid"), "error");
+      return;
+    }
+
+    if (draft.ratePeriods.some((period) => period.endDate && period.startDate && period.endDate < period.startDate)) {
+      setFeedback(t("validationRatePeriodDateRange"), "error");
+      return;
+    }
 
     try {
       if (submitButton) {
@@ -558,8 +601,8 @@ function wireRoomModal() {
 
       const result = await runProtected(
         () => roomId
-          ? updateAdminRoom(state.auth.accessToken, roomId, payload)
-          : createAdminRoom(state.auth.accessToken, payload),
+          ? updateAdminRoom(state.auth.accessToken, roomId, draft)
+          : createAdminRoom(state.auth.accessToken, draft),
         t("roomsLoadFailed")
       );
 
@@ -569,6 +612,7 @@ function wireRoomModal() {
 
       setFeedback(t("roomSaved"), "success");
       state.editingRoomId = null;
+      state.roomDraft = null;
       await refreshRooms();
       closeRoomModal();
     } finally {
@@ -837,19 +881,23 @@ function renderRoomModal() {
   const title = document.querySelector("[data-admin-room-modal-title]");
   const form = document.querySelector("[data-admin-room-form]");
   const list = document.querySelector("[data-admin-rooms-list]");
+  const ratePeriodList = document.querySelector("[data-admin-rate-period-list]");
 
-  if (!title || !form || !list) {
+  if (!title || !form || !list || !ratePeriodList) {
     return;
   }
 
   const room = state.rooms.find((item) => item.id === state.editingRoomId);
+  const draft = state.roomDraft || createRoomDraft(room);
+  state.roomDraft = draft;
 
   title.textContent = room ? t("roomEditorEdit") : t("roomEditorCreate");
-  form.elements.roomId.value = room?.id || "";
-  form.elements.name.value = room?.name || "";
-  form.elements.capacity.value = room?.capacity ?? "";
-  form.elements.ratePerNight.value = room?.ratePerNight ?? "";
-  form.elements.discount.value = room?.discount ?? "";
+  form.elements.roomId.value = draft.roomId || "";
+  form.elements.name.value = draft.name || "";
+  form.elements.capacity.value = draft.capacity ?? "";
+  form.elements.ratePerNight.value = draft.ratePerNight ?? "";
+  form.elements.discount.value = draft.discount ?? "";
+  ratePeriodList.innerHTML = renderRatePeriodInputs(draft.ratePeriods);
 
   if (state.loadingRooms) {
     list.innerHTML = `<div class="empty-state"><p>${t("buttonLoading")}</p></div>`;
@@ -875,9 +923,19 @@ function renderRoomModal() {
       <tbody>
         ${state.rooms.map((currentRoom) => `
           <tr>
-            <td>${escapeHtml(currentRoom.name)}</td>
+            <td>
+              <div class="admin-rate-period-summary">
+                <strong>${escapeHtml(currentRoom.name)}</strong>
+                <span class="note">${formatRatePeriodsSummary(currentRoom.ratePeriods)}</span>
+              </div>
+            </td>
             <td>${currentRoom.capacity ?? "-"}</td>
-            <td>${formatCurrency(currentRoom.ratePerNight)}</td>
+            <td>
+              <div class="admin-rate-period-summary">
+                <strong>${formatCurrency(currentRoom.ratePerNight)}</strong>
+                <span class="note">${t("labelRate")}</span>
+              </div>
+            </td>
             <td>${formatPercent(currentRoom.discount)}</td>
             <td>
               <div class="admin-row-actions">
@@ -894,6 +952,7 @@ function renderRoomModal() {
   list.querySelectorAll("[data-room-edit]").forEach((button) => {
     button.addEventListener("click", () => {
       state.editingRoomId = Number(button.dataset.roomEdit);
+      state.roomDraft = createRoomDraft(state.rooms.find((item) => item.id === state.editingRoomId));
       renderRoomModal();
     });
   });
@@ -973,6 +1032,74 @@ function renderBookingModal() {
   });
 }
 
+function createRoomDraft(room = {}) {
+  return {
+    roomId: room?.id || "",
+    name: room?.name || "",
+    capacity: room?.capacity ?? "",
+    ratePerNight: room?.ratePerNight ?? "",
+    discount: room?.discount ?? "",
+    ratePeriods: Array.isArray(room?.ratePeriods) && room.ratePeriods.length
+      ? room.ratePeriods.map((period) => createRatePeriodDraft(period))
+      : []
+  };
+}
+
+function createRatePeriodDraft(period = {}) {
+  return {
+    startDate: period.startDate || "",
+    endDate: period.endDate || "",
+    ratePerNight: period.ratePerNight ?? ""
+  };
+}
+
+function collectRoomDraftFromForm(form) {
+  if (!form) {
+    return createRoomDraft();
+  }
+
+  return {
+    roomId: form.elements.roomId.value || "",
+    name: form.elements.name.value,
+    capacity: form.elements.capacity.value,
+    ratePerNight: form.elements.ratePerNight.value,
+    discount: form.elements.discount.value,
+    ratePeriods: Array.from(form.querySelectorAll("[data-admin-rate-period-item]")).map((row) => ({
+      startDate: row.querySelector('[name="ratePeriodStartDate"]')?.value || "",
+      endDate: row.querySelector('[name="ratePeriodEndDate"]')?.value || "",
+      ratePerNight: row.querySelector('[name="ratePeriodRatePerNight"]')?.value || ""
+    }))
+  };
+}
+
+function renderRatePeriodInputs(ratePeriods) {
+  if (!ratePeriods.length) {
+    return `<p class="note">${t("roomRatePeriodsEmpty")}</p>`;
+  }
+
+  return ratePeriods.map((period, index) => `
+    <article class="admin-rate-period-item" data-admin-rate-period-item="${index}">
+      <div class="admin-rate-period-grid">
+        <label>
+          <span>${t("labelStartDate")}</span>
+          <input name="ratePeriodStartDate" type="date" value="${escapeHtml(period.startDate || "")}" required>
+        </label>
+        <label>
+          <span>${t("labelEndDate")}</span>
+          <input name="ratePeriodEndDate" type="date" value="${escapeHtml(period.endDate || "")}" required>
+        </label>
+        <label>
+          <span>${t("labelRate")}</span>
+          <input name="ratePeriodRatePerNight" type="number" min="0" step="0.01" value="${escapeHtml(period.ratePerNight ?? "")}" required>
+        </label>
+        <div class="admin-inline-actions">
+          <button class="button button-secondary" type="button" data-admin-remove-rate-period="${index}">${t("buttonRemoveRatePeriod")}</button>
+        </div>
+      </div>
+    </article>
+  `).join("");
+}
+
 function openModal(type) {
   const modal = document.querySelector(type === "room" ? "[data-admin-room-modal]" : "[data-admin-booking-modal]");
   if (modal) {
@@ -982,6 +1109,7 @@ function openModal(type) {
 
 function closeRoomModal() {
   state.editingRoomId = null;
+  state.roomDraft = null;
   const modal = document.querySelector("[data-admin-room-modal]");
   if (modal) {
     modal.hidden = true;
@@ -1050,6 +1178,16 @@ function formatPercent(value) {
   }
 
   return `${Math.round(Number(value) * 100)}%`;
+}
+
+function formatRatePeriodsSummary(ratePeriods) {
+  if (!Array.isArray(ratePeriods) || !ratePeriods.length) {
+    return t("roomRatePeriodsEmpty");
+  }
+
+  return ratePeriods
+    .map((period) => `${period.startDate} → ${period.endDate} · ${formatCurrency(period.ratePerNight)}`)
+    .join(" | ");
 }
 
 function formatDateTime(value) {

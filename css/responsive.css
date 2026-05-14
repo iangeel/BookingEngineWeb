@@ -119,6 +119,15 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .admin-rate-period-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .admin-rate-period-grid .admin-inline-actions {
+    grid-column: 1 / -1;
+  }
+
   .admin-modal-body {
     grid-template-columns: minmax(0, 1fr);
   }

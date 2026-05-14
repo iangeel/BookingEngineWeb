@@ -4,10 +4,11 @@ import {
   getBookingStatus,
   initiatePayment,
   updateClientData
-} from "./api.js?v=20260514a";
+} from "./api.js?v=20260514d";
 
 const STORAGE_KEY = "aurelia-booking-flow";
 const LANGUAGE_KEY = "booking-engine-language";
+const AVAILABILITY_CACHE_VERSION = "20260514d";
 const DEFAULT_LANGUAGE = "ro";
 const LOCALES = {
   ro: "ro-RO",
@@ -106,7 +107,7 @@ const TRANSLATIONS = {
     roomsTitle: "Camere disponibile pentru perioada selectata.",
     roomsLead: "Aceasta pagina ramane disponibila ca ruta directa alternativa, in timp ce fluxul principal incepe si continua din pagina principala.",
     roomsFooterDescription: "Ecran alternativ de listare a camerelor pentru oaspetii care ajung direct pe ruta de camere.",
-    roomsFooterItem1: "Tarif pe noapte",
+    roomsFooterItem1: "Tarif total pentru sejur",
     roomsFooterItem2: "Selectie in functie de capacitate",
     roomsFooterItem3: "Pasi de rezervare accesibili",
     bookingEyebrow: "Detalii oaspete",
@@ -172,7 +173,7 @@ const TRANSLATIONS = {
     roomAvailabilityLabel: "Disponibila pentru perioada selectata",
     roomAvailabilityMissingLabel: "Disponibilitate primita din backend",
     priceUnavailable: "Tarif disponibil in pasul urmator",
-    pricePerNight: "pe noapte",
+    priceForStay: "pentru intreaga sedere",
     buttonSelectRoom: "Selecteaza camera",
     staySummaryTitle: "Perioada selectata",
     fromToSeparator: "pana la",
@@ -217,7 +218,7 @@ const TRANSLATIONS = {
     roomsTitle: "Available rooms for the selected stay.",
     roomsLead: "This page remains available as a fallback direct route, while the main booking flow now starts and continues from the homepage.",
     roomsFooterDescription: "Fallback room listing screen for guests who arrive directly on the rooms route.",
-    roomsFooterItem1: "Nightly pricing",
+    roomsFooterItem1: "Total stay pricing",
     roomsFooterItem2: "Capacity-aware selection",
     roomsFooterItem3: "Accessible booking steps",
     bookingEyebrow: "Guest details",
@@ -283,7 +284,7 @@ const TRANSLATIONS = {
     roomAvailabilityLabel: "Available for the selected stay",
     roomAvailabilityMissingLabel: "Availability received from backend",
     priceUnavailable: "Rate available in the next step",
-    pricePerNight: "per night",
+    priceForStay: "for the full stay",
     buttonSelectRoom: "Select room",
     staySummaryTitle: "Selected stay",
     fromToSeparator: "to",
@@ -542,6 +543,7 @@ function wireSearchForms() {
 
         const response = await getAvailability(state.stay);
         state.availability = {
+          version: AVAILABILITY_CACHE_VERSION,
           stayKey: buildStayKey(state.stay),
           data: response.data
         };
@@ -567,12 +569,13 @@ async function renderRoomsPage() {
   }
 
   try {
-    const cachedAvailability = state.availability?.stayKey === buildStayKey(state.stay)
+    const cachedAvailability = isCurrentAvailabilityCache(state.availability, state.stay)
       ? state.availability.data
       : null;
     const rooms = cachedAvailability || (await getAvailability(state.stay)).data;
 
     state.availability = {
+      version: AVAILABILITY_CACHE_VERSION,
       stayKey: buildStayKey(state.stay),
       data: rooms
     };
@@ -613,10 +616,11 @@ async function renderRoomsPage() {
             endDate: state.stay.checkout
           });
 
-          state.room = {
+      state.room = {
             ...room,
             name: bookingResponse.data.roomName || room.name,
-            capacity: bookingResponse.data.totalCapacity ?? bookingResponse.data.roomCapacity ?? room.totalCapacity ?? room.capacity
+            capacity: bookingResponse.data.totalCapacity ?? bookingResponse.data.roomCapacity ?? room.totalCapacity ?? room.capacity,
+            totalRateForStay: room.totalRateForStay ?? null
           };
           state.booking = bookingResponse.data;
           saveState();
@@ -675,9 +679,9 @@ function renderBookingPage() {
     </div>
     <div class="summary-total">
       <span>${t("totalStayEstimate")}</span>
-      <strong>${formatRate(room.totalRatePerNight)}</strong>
+      <strong>${formatRate(room.totalRateForStay)}</strong>
     </div>
-    <p class="note">${room.totalRatePerNight != null ? t("pricePerNight") : t("amountPending")}</p>
+    <p class="note">${room.totalRateForStay != null ? t("priceForStay") : t("amountPending")}</p>
   `;
 
   const countrySelect = form.elements.phoneCountry;
@@ -915,7 +919,7 @@ async function renderConfirmationPage() {
       </div>
       <div class="summary-total">
         <span>${t("totalStayEstimate")}</span>
-        <strong>${formatRate(room.totalRatePerNight)}</strong>
+        <strong>${formatRate(room.totalRateForStay)}</strong>
       </div>
       <p class="note">${t("nextBackendNote")}</p>
     `;
@@ -947,12 +951,12 @@ function roomCardTemplate(room) {
         <div class="amenity-tags">
           ${room.roomCount > 1 ? `<span>${t("roomCountLabel")}: ${room.roomCount}</span>` : ""}
           ${room.roomCount > 1 ? `<span>${t("roomsIncludedLabel")}: ${room.roomNames.join(", ")}</span>` : ""}
-          <span>${room.availableDates?.length ? t("roomAvailabilityLabel") : t("roomAvailabilityMissingLabel")}</span>
+          <span>${t("roomAvailabilityLabel")}</span>
         </div>
         <div class="price-row">
           <div class="price-stack">
-            <strong class="price">${formatRate(room.totalRatePerNight)}</strong>
-            <span class="note">${room.totalRatePerNight != null ? t("pricePerNight") : t("priceUnavailable")}</span>
+            <strong class="price">${formatRate(room.totalRateForStay)}</strong>
+            <span class="note">${room.totalRateForStay != null ? t("priceForStay") : t("priceUnavailable")}</span>
           </div>
           <button class="button button-primary" type="button" data-select-room="${room.optionId}">${t("buttonSelectRoom")}</button>
         </div>
@@ -978,12 +982,25 @@ function buildRoomSummary(roomState, bookingState) {
     capacity: bookingState?.totalCapacity ?? bookingState?.roomCapacity ?? roomState?.totalCapacity ?? roomState?.capacity ?? state.stay.guests,
     roomCount: bookingState?.roomCount ?? roomState?.roomCount ?? roomNames.length,
     roomNames,
-    totalRatePerNight: roomState?.totalRatePerNight ?? null
+    totalRateForStay: bookingState?.totalRateForStay ?? roomState?.totalRateForStay ?? null
   };
 }
 
 function buildStayKey(stay) {
   return [stay.checkin || "", stay.checkout || "", Number(stay.guests || 2)].join("|");
+}
+
+function isCurrentAvailabilityCache(availability, stay) {
+  if (!availability || availability.version !== AVAILABILITY_CACHE_VERSION) {
+    return false;
+  }
+
+  if (availability.stayKey !== buildStayKey(stay)) {
+    return false;
+  }
+
+  return Array.isArray(availability.data)
+    && availability.data.every((room) => Object.hasOwn(room || {}, "totalRateForStay"));
 }
 
 function calculateNights(checkin, checkout) {
