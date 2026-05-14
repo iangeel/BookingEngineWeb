@@ -647,6 +647,8 @@ select:focus {
 .admin-tabs,
 .admin-split,
 .admin-panel-heading,
+.admin-rate-period-list,
+.admin-rate-period-item,
 .admin-row-actions,
 .admin-inline-actions,
 .admin-form-grid,
@@ -737,6 +739,39 @@ select:focus {
 .admin-field-label {
   font-size: 0.95rem;
   font-weight: 600;
+}
+
+.admin-rate-period-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-rate-period-list {
+  gap: 0.85rem;
+}
+
+.admin-rate-period-item {
+  padding: 1rem;
+  border: var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-soft);
+}
+
+.admin-rate-period-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-rate-period-summary {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-rate-period-summary strong {
+  font-size: 0.95rem;
 }
 
 .admin-table-wrap {

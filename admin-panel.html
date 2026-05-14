@@ -103,6 +103,13 @@
               <span data-admin-i18n="labelDiscount">Discount</span>
               <input name="discount" type="number" min="0" max="1" step="0.01">
             </label>
+            <div class="admin-field-full">
+              <div class="admin-rate-period-header">
+                <span class="admin-field-label" data-admin-i18n="labelRatePeriods">Perioade tarifare</span>
+                <button class="button button-secondary" type="button" data-admin-add-rate-period data-admin-i18n="buttonAddRatePeriod">Adauga perioada</button>
+              </div>
+              <div class="admin-rate-period-list" data-admin-rate-period-list></div>
+            </div>
             <div class="admin-inline-actions admin-field-full">
               <button class="button button-primary" type="submit" data-admin-room-submit data-admin-i18n="buttonSaveRoom">Salveaza camera</button>
               <button class="button button-secondary" type="button" data-admin-cancel-room-edit data-admin-i18n="buttonDiscard">Renunta</button>
@@ -203,6 +210,6 @@
     </footer>
   </div>
 
-  <script type="module" src="js/admin.js?v=20260512i"></script>
+  <script type="module" src="js/admin.js?v=20260514b"></script>
 </body>
 </html>
