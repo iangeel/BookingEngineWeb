@@ -11,6 +11,7 @@ import {
   updateAdminBooking,
   updateAdminRoom
 } from "./api.js?v=20260514e";
+import { THEME_BRAND } from "./themes/pursisimpluvama_theme.js?v=20260514f";
 
 const LANGUAGE_KEY = "booking-engine-language";
 const ADMIN_AUTH_KEY = "booking-engine-admin-auth";
@@ -241,6 +242,7 @@ const state = {
 document.addEventListener("DOMContentLoaded", async () => {
   hydrateAdminAuthFromHash();
   applyLanguage();
+  applyThemeBrand();
   wireLanguageSwitcher();
 
   const page = document.body.dataset.page;
@@ -269,6 +271,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadAdminData();
   }
 });
+
+function applyThemeBrand() {
+  document.querySelectorAll("[data-theme-brand-name]").forEach((node) => {
+    node.textContent = THEME_BRAND.hotelName;
+  });
+
+  document.querySelectorAll("[data-theme-brand-mark]").forEach((node) => {
+    node.textContent = THEME_BRAND.hotelMark;
+  });
+}
 
 function t(key, replacements = {}) {
   const languagePack = TRANSLATIONS[state.language] || TRANSLATIONS[DEFAULT_LANGUAGE];
@@ -416,6 +428,7 @@ function wireLanguageSwitcher() {
     select.addEventListener("change", () => {
       saveLanguage(select.value);
       applyLanguage();
+      applyThemeBrand();
     });
   });
 }
@@ -1167,7 +1180,7 @@ function formatCurrency(value) {
 
   return new Intl.NumberFormat(LOCALES[state.language], {
     style: "currency",
-    currency: "EUR",
+    currency: "RON",
     maximumFractionDigits: 2
   }).format(Number(value));
 }

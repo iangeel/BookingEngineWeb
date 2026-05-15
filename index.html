@@ -9,25 +9,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/themes/pursisimpluvama_theme.css">
   <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body data-page="home">
   <div class="site-shell">
     <header class="topbar">
       <a class="brand" href="index.html" aria-label="Direct Booking Engine home">
-        <span class="brand-mark">BE</span>
+        <span class="brand-mark" data-theme-brand-mark>PS</span>
         <span>
-          <strong data-i18n="brandName">Booking Engine</strong>
+          <strong data-i18n="brandName" data-theme-brand-name>Pur si Simplu</strong>
           <small data-i18n="brandTagline">Flux direct de rezervare</small>
         </span>
       </a>
       <div class="header-tools">
-        <nav class="nav" aria-label="Primary">
-          <a href="index.html" aria-current="page" data-i18n="navSearch">Cautare</a>
-          <a href="rooms.html" data-i18n="navRooms">Camere</a>
-          <a href="booking.html" data-i18n="navBooking">Rezervare</a>
-          <a href="confirmation.html" data-i18n="navConfirmation">Confirmare</a>
-        </nav>
         <label class="language-switcher">
           <span data-i18n="languageLabel">Limba</span>
           <select data-language-switcher aria-label="Language selector">
@@ -54,11 +49,11 @@
             <input type="date" name="checkout" required>
           </label>
           <label>
-            <span data-i18n="labelGuests">Oaspeti</span>
+            <span data-i18n="labelGuests">Persoane</span>
             <div class="guest-stepper" data-guest-stepper>
-              <button type="button" class="guest-stepper-button" data-guest-step="decrease" data-i18n-aria-label="guestCounterDecrease" aria-label="Reduce numarul de oaspeti">-</button>
+              <button type="button" class="guest-stepper-button" data-guest-step="decrease" data-i18n-aria-label="guestCounterDecrease" aria-label="Reduce numarul de persoane">-</button>
               <output class="guest-stepper-value" data-guest-count-display aria-live="polite"></output>
-              <button type="button" class="guest-stepper-button" data-guest-step="increase" data-i18n-aria-label="guestCounterIncrease" aria-label="Creste numarul de oaspeti">+</button>
+              <button type="button" class="guest-stepper-button" data-guest-step="increase" data-i18n-aria-label="guestCounterIncrease" aria-label="Creste numarul de persoane">+</button>
               <input type="hidden" name="guests" value="2" required>
             </div>
           </label>
@@ -67,19 +62,9 @@
       </section>
     </main>
 
-    <footer class="footer">
-      <div>
-        <strong data-i18n="brandName">Booking Engine</strong>
-        <p data-i18n="footerDescription">Un frontend orientat pe rezervare, gandit sa functioneze impreuna cu `BookingOrchestratorAPI` in spatele site-urilor hotelurilor si unitatilor de cazare.</p>
-      </div>
-      <div class="footer-meta">
-        <span data-i18n="footerItem1">Flux de rezervare pregatit pentru integrare</span>
-        <span data-i18n="footerItem2">Stari de rezervare conduse din backend</span>
-        <span data-i18n="footerItem3">Responsive pe orice dispozitiv</span>
-      </div>
-    </footer>
+    <footer class="footer footer-minimal" aria-hidden="true"></footer>
   </div>
 
-  <script type="module" src="js/app.js?v=20260514d"></script>
+  <script type="module" src="js/app.js?v=20260514h"></script>
 </body>
 </html>

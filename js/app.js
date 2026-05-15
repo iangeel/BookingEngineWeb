@@ -5,6 +5,7 @@ import {
   initiatePayment,
   updateClientData
 } from "./api.js?v=20260514d";
+import { THEME_BRAND } from "./themes/pursisimpluvama_theme.js?v=20260514f";
 
 const STORAGE_KEY = "aurelia-booking-flow";
 const LANGUAGE_KEY = "booking-engine-language";
@@ -84,18 +85,18 @@ const TRANSLATIONS = {
     homeSearchTitle: "Verifica disponibilitatea si continua catre selectia camerei",
     labelCheckin: "Check-in",
     labelCheckout: "Check-out",
-    labelGuests: "Oaspeti",
-    guestCounterDecrease: "Reduce numarul de oaspeti",
-    guestCounterIncrease: "Creste numarul de oaspeti",
+    labelGuests: "Persoane",
+    guestCounterDecrease: "Reduce numarul de persoane",
+    guestCounterIncrease: "Creste numarul de persoane",
     labelFirstName: "Prenume",
     labelLastName: "Nume",
     labelEmail: "Email",
     labelPhoneCountry: "Tara / prefix",
     labelMobilePhoneNumber: "Numar de telefon",
-    guests1: "1 oaspete",
-    guests2: "2 oaspeti",
-    guests3: "3 oaspeti",
-    guests4: "4 oaspeti",
+    guests1: "1 persoana",
+    guests2: "2 persoane",
+    guests3: "3 persoane",
+    guests4: "4 persoane",
     buttonViewAvailability: "Vezi disponibilitatea",
     homeRoomsEyebrow: "Camere disponibile",
     homeRoomsTitle: "Selecteaza camera potrivita pentru aceasta perioada.",
@@ -106,26 +107,24 @@ const TRANSLATIONS = {
     roomsEyebrow: "Disponibilitate camere",
     roomsTitle: "Camere disponibile pentru perioada selectata.",
     roomsLead: "Aceasta pagina ramane disponibila ca ruta directa alternativa, in timp ce fluxul principal incepe si continua din pagina principala.",
-    roomsFooterDescription: "Ecran alternativ de listare a camerelor pentru oaspetii care ajung direct pe ruta de camere.",
+    roomsFooterDescription: "Ecran alternativ de listare a camerelor pentru persoanele care ajung direct pe ruta de camere.",
     roomsFooterItem1: "Tarif total pentru sejur",
     roomsFooterItem2: "Selectie in functie de capacitate",
     roomsFooterItem3: "Pasi de rezervare accesibili",
-    bookingEyebrow: "Detalii oaspete",
+    bookingEyebrow: "Detalii persoana",
     bookingTitle: "Completeaza detaliile rezervarii.",
-    bookingLead: "Camera selectata si rezumatul sederii raman vizibile pe masura ce oaspetele continua catre plata.",
-    bookingFormEyebrow: "Oaspete principal",
-    bookingFormTitle: "Informatii calator",
-    bookingTrustTitle: "De ce sa continui?",
-    bookingTrustBody: "Datele tale sunt pregatite pentru pasul de backend `PATCH /api/bookings/{id}/client?token=`, urmat de initierea platii.",
+    bookingLead: "Camera selectata si rezumatul perioadei de cazare raman vizibile pe masura ce clientul continua catre plata.",
+    bookingFormEyebrow: "Persoana principala",
+    bookingFormTitle: "Informatii client",
     buttonContinuePayment: "Continua catre plata",
-    bookingFooterDescription: "Flux de date pentru oaspete pregatit pentru actualizari backend pe baza de token si initierea platii.",
+    bookingFooterDescription: "Flux de date pentru client pregatit pentru actualizari backend pe baza de token si initierea platii.",
     bookingFooterItem1: "Etichete accesibile pentru formular",
     bookingFooterItem2: "Progres salvat",
     bookingFooterItem3: "Pas urmator pregatit pentru confirmare",
     confirmationEyebrow: "Status rezervare",
     confirmationTitle: "Rezumatul rezervarii tale, disponibil imediat.",
     confirmationLead: "Aceasta pagina de confirmare suporta starile plata reusita, in asteptare si esuata folosind viitorul lookup `GET /api/bookings/{id}?token=` din backend.",
-    confirmationFooterDescription: "Ecran de status al rezervarii conceput pentru preluare dupa plata si pentru claritate in fata oaspetelui.",
+    confirmationFooterDescription: "Ecran de status al rezervarii conceput pentru preluare dupa plata si pentru claritate in fata clientului.",
     confirmationFooterItem1: "Referinta vizibila",
     confirmationFooterItem2: "Variante pentru starea platii",
     confirmationFooterItem3: "Actiuni clare pentru pasul urmator",
@@ -149,7 +148,7 @@ const TRANSLATIONS = {
     confirmationPendingBody: "Camera ramane rezervata in timp ce statusul platii este finalizat.",
     confirmationPendingAction: "Revino la rezervare",
     confirmationFailedTitle: "Plata a esuat",
-    confirmationFailedBody: "Selectia camerei ramane vizibila pentru ca oaspetele sa poata incerca din nou sau sa actualizeze datele.",
+    confirmationFailedBody: "Selectia camerei ramane vizibila pentru ca persoana sa poata incerca din nou sau sa actualizeze datele.",
     confirmationFailedAction: "Incearca din nou",
     buttonContinueToPaymentPage: "Continua catre plata",
     bookingReference: "Referinta rezervare",
@@ -162,8 +161,8 @@ const TRANSLATIONS = {
     selectedRoom: "Camera selectata",
     totalStayEstimate: "Cost total estimat",
     nextBackendNote: "Pasul urmator in backend: preia payloadul final al rezervarii din `GET /api/bookings/{id}?token=` si mapeaza fiecare status in aceste variante de interfata.",
-    guestFallback: "Oaspete",
-    roomBadgeUpTo: "Pana la {count} oaspeti",
+    guestFallback: "Persoana",
+    roomBadgeUpTo: "Pana la {count} persoane",
     premiumRoom: "Camera disponibila",
     packageRoom: "Pachet de camere",
     singleRoom: "Camera individuala",
@@ -173,14 +172,14 @@ const TRANSLATIONS = {
     roomAvailabilityLabel: "Disponibila pentru perioada selectata",
     roomAvailabilityMissingLabel: "Disponibilitate primita din backend",
     priceUnavailable: "Tarif disponibil in pasul urmator",
-    priceForStay: "pentru intreaga sedere",
+    priceForStay: "pentru intreaga perioada de cazare",
     buttonSelectRoom: "Selecteaza camera",
     staySummaryTitle: "Perioada selectata",
     fromToSeparator: "pana la",
     nights: "nopti",
     night: "noapte",
-    guestSingular: "oaspete",
-    guestPlural: "oaspeti",
+    guestSingular: "persoana",
+    guestPlural: "persoane",
     amountPending: "Valoarea finala va fi confirmata de backend la initierea platii."
   },
   en: {
@@ -195,9 +194,9 @@ const TRANSLATIONS = {
     homeSearchTitle: "Check availability and continue to room selection",
     labelCheckin: "Check-in",
     labelCheckout: "Check-out",
-    labelGuests: "Guests",
-    guestCounterDecrease: "Decrease guest count",
-    guestCounterIncrease: "Increase guest count",
+    labelGuests: "People",
+    guestCounterDecrease: "Decrease people count",
+    guestCounterIncrease: "Increase people count",
     labelFirstName: "First name",
     labelLastName: "Last name",
     labelEmail: "Email",
@@ -221,15 +220,13 @@ const TRANSLATIONS = {
     roomsFooterItem1: "Total stay pricing",
     roomsFooterItem2: "Capacity-aware selection",
     roomsFooterItem3: "Accessible booking steps",
-    bookingEyebrow: "Guest details",
+    bookingEyebrow: "Person details",
     bookingTitle: "Complete your booking details.",
-    bookingLead: "The selected room and stay summary remain visible while the guest continues toward payment.",
-    bookingFormEyebrow: "Primary guest",
-    bookingFormTitle: "Traveler information",
-    bookingTrustTitle: "Why continue?",
-    bookingTrustBody: "Your details are prepared for the backend `PATCH /api/bookings/{id}/client?token=` step, followed by payment initiation.",
+    bookingLead: "The selected room and stay summary remain visible while the client continues toward payment.",
+    bookingFormEyebrow: "Primary person",
+    bookingFormTitle: "Client information",
     buttonContinuePayment: "Continue to payment",
-    bookingFooterDescription: "Guest details flow prepared for token-based backend updates and payment initiation.",
+    bookingFooterDescription: "Client details flow prepared for token-based backend updates and payment initiation.",
     bookingFooterItem1: "Accessible form labels",
     bookingFooterItem2: "Saved progress",
     bookingFooterItem3: "Confirmation-ready next step",
@@ -260,7 +257,7 @@ const TRANSLATIONS = {
     confirmationPendingBody: "Your room is still reserved while the payment status is being finalized.",
     confirmationPendingAction: "Review booking",
     confirmationFailedTitle: "Payment failed",
-    confirmationFailedBody: "The room selection remains visible so the guest can retry or update details.",
+    confirmationFailedBody: "The room selection remains visible so the person can retry or update details.",
     confirmationFailedAction: "Try again",
     buttonContinueToPaymentPage: "Continue to payment",
     bookingReference: "Booking reference",
@@ -273,8 +270,8 @@ const TRANSLATIONS = {
     selectedRoom: "Selected room",
     totalStayEstimate: "Total stay estimate",
     nextBackendNote: "Next backend step: fetch the final booking payload from `GET /api/bookings/{id}?token=` and map each status to these UI variants.",
-    guestFallback: "Guest",
-    roomBadgeUpTo: "Up to {count} guests",
+    guestFallback: "Person",
+    roomBadgeUpTo: "Up to {count} people",
     premiumRoom: "Available room",
     packageRoom: "Room package",
     singleRoom: "Single room",
@@ -284,14 +281,14 @@ const TRANSLATIONS = {
     roomAvailabilityLabel: "Available for the selected stay",
     roomAvailabilityMissingLabel: "Availability received from backend",
     priceUnavailable: "Rate available in the next step",
-    priceForStay: "for the full stay",
+    priceForStay: "for the full accommodation period",
     buttonSelectRoom: "Select room",
     staySummaryTitle: "Selected stay",
     fromToSeparator: "to",
     nights: "nights",
     night: "night",
-    guestSingular: "guest",
-    guestPlural: "guests",
+    guestSingular: "person",
+    guestPlural: "people",
     amountPending: "The final amount will be confirmed by the backend when payment starts."
   }
 };
@@ -314,6 +311,7 @@ let currentLanguage = loadLanguage();
 
 document.addEventListener("DOMContentLoaded", async () => {
   applyLanguage();
+  applyThemeBrand();
   wireLanguageSwitcher();
   applyDateDefaults();
   hydrateSearchForms();
@@ -334,6 +332,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderConfirmationPage();
   }
 });
+
+function applyThemeBrand() {
+  document.querySelectorAll("[data-theme-brand-name]").forEach((node) => {
+    node.textContent = THEME_BRAND.hotelName;
+  });
+
+  document.querySelectorAll("[data-theme-brand-mark]").forEach((node) => {
+    node.textContent = THEME_BRAND.hotelMark;
+  });
+}
 
 function loadState() {
   try {
@@ -412,8 +420,8 @@ function applyLanguage() {
         en: "Fallback direct link to available rooms inside the booking engine."
       },
       booking: {
-        ro: "Confirma camera selectata, completeaza datele oaspetelui si continua catre plata securizata.",
-        en: "Confirm the selected room, enter guest details, and continue toward secure payment."
+        ro: "Confirma camera selectata, completeaza datele clientului si continua catre plata securizata.",
+        en: "Confirm the selected room, enter client details, and continue toward secure payment."
       },
       confirmation: {
         ro: "Verifica statusul rezervarii, detaliile de confirmare si starea platii.",
@@ -454,6 +462,7 @@ function wireLanguageSwitcher() {
     select.addEventListener("change", async (event) => {
       saveLanguage(event.target.value);
       applyLanguage();
+      applyThemeBrand();
       hydrateSearchForms();
 
       if (document.querySelector("[data-room-list]")) {
@@ -675,7 +684,6 @@ function renderBookingPage() {
       <span>${formatStayRange(state.stay.checkin, state.stay.checkout)}</span>
       <span>${formatNights(nights)}</span>
       <span>${formatGuestsCount(state.booking.guestCount ?? state.stay.guests)}</span>
-      <span>${t("referenceShort")} ${state.booking.id.slice(0, 8).toUpperCase()}</span>
     </div>
     <div class="summary-total">
       <span>${t("totalStayEstimate")}</span>
@@ -1024,7 +1032,7 @@ function formatLongDate(value) {
 function formatCurrency(value) {
   return new Intl.NumberFormat(LOCALES[currentLanguage], {
     style: "currency",
-    currency: "EUR",
+    currency: "RON",
     maximumFractionDigits: 0
   }).format(value);
 }
