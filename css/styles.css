@@ -31,11 +31,14 @@
 }
 
 html {
+  min-height: 100%;
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
   min-width: 320px;
   font-family: "Manrope", sans-serif;
   color: var(--text);
@@ -61,9 +64,17 @@ select {
 }
 
 .site-shell {
+  display: flex;
+  flex-direction: column;
   width: min(calc(100% - 2rem), var(--max-width));
+  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
   padding: 1.25rem 0 2rem;
+}
+
+.site-shell > main {
+  flex: 1;
 }
 
 .topbar,
@@ -540,6 +551,12 @@ select:focus {
   color: var(--text-soft);
 }
 
+.footer-minimal {
+  min-height: 0.75rem;
+  padding: 0.25rem 0 0;
+  border-top: 0;
+}
+
 .booking-pill {
   display: inline-grid;
   gap: 0.35rem;
@@ -959,12 +976,6 @@ select:focus {
   padding-top: 1rem;
   border-top: 1px solid rgba(141, 84, 48, 0.12);
   font-weight: 800;
-}
-
-.trust-banner {
-  padding: 1rem;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgba(234, 211, 184, 0.5), rgba(255, 253, 250, 0.9));
 }
 
 .status-card[data-status="CONFIRMED"] {

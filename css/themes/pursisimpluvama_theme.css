@@ -1,0 +1,47 @@
+:root {
+  --text: rgb(0, 181, 125);
+  --text-soft: rgb(0, 181, 125);
+  --accent: rgb(0, 181, 125);
+  --accent-strong: rgb(0, 181, 125);
+  --accent-soft: rgba(0, 181, 125, 0.14);
+  --gold: rgb(71, 225, 176);
+  --success: rgb(0, 181, 125);
+  --warning: rgb(0, 181, 125);
+  --danger: rgb(0, 181, 125);
+}
+
+[data-theme-brand-name] {
+  font-family: "Bradley Hand ITC", "Bradley Hand", "Segoe Print", "Lucida Handwriting", cursive;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.brand-mark,
+.button-primary,
+.button-secondary,
+.button-success,
+.button-danger,
+.admin-tab.is-active,
+.guest-stepper-button,
+.admin-modal-close {
+  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+}
+
+.button-secondary {
+  border: 0;
+}
+
+.guest-stepper-button:hover,
+.guest-stepper-button:focus-visible {
+  background: linear-gradient(135deg, rgb(0, 166, 115), rgb(53, 214, 163));
+}
+
+.room-badge {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+}
+
+.admin-tab {
+  color: var(--text);
+}

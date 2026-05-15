@@ -9,25 +9,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/themes/pursisimpluvama_theme.css">
   <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body data-page="rooms">
   <div class="site-shell">
     <header class="topbar">
       <a class="brand" href="index.html" aria-label="Booking Engine home">
-        <span class="brand-mark">BE</span>
+        <span class="brand-mark" data-theme-brand-mark>PS</span>
         <span>
-          <strong data-i18n="brandName">Booking Engine</strong>
+          <strong data-i18n="brandName" data-theme-brand-name>Pur si Simplu</strong>
           <small data-i18n="brandTagline">Flux direct de rezervare</small>
         </span>
       </a>
       <div class="header-tools">
-        <nav class="nav" aria-label="Primary">
-          <a href="index.html" data-i18n="navSearch">Cautare</a>
-          <a href="rooms.html" aria-current="page" data-i18n="navRooms">Camere</a>
-          <a href="booking.html" data-i18n="navBooking">Rezervare</a>
-          <a href="confirmation.html" data-i18n="navConfirmation">Confirmare</a>
-        </nav>
         <label class="language-switcher">
           <span data-i18n="languageLabel">Limba</span>
           <select data-language-switcher aria-label="Language selector">
@@ -43,26 +38,15 @@
         <div>
           <p class="eyebrow" data-i18n="roomsEyebrow">Disponibilitate camere</p>
           <h1 data-i18n="roomsTitle">Camere disponibile pentru perioada selectata.</h1>
-          <p class="lede" data-i18n="roomsLead">Aceasta pagina ramane disponibila ca ruta directa alternativa, in timp ce fluxul principal incepe si continua din pagina principala.</p>
         </div>
       </section>
 
       <section class="rooms-grid" data-room-list aria-live="polite"></section>
     </main>
 
-    <footer class="footer">
-      <div>
-        <strong data-i18n="brandName">Booking Engine</strong>
-        <p data-i18n="roomsFooterDescription">Ecran alternativ de listare a camerelor pentru oaspetii care ajung direct pe ruta de camere.</p>
-      </div>
-      <div class="footer-meta">
-        <span data-i18n="roomsFooterItem1">Tarif pe noapte</span>
-        <span data-i18n="roomsFooterItem2">Selectie in functie de capacitate</span>
-        <span data-i18n="roomsFooterItem3">Pasi de rezervare accesibili</span>
-      </div>
-    </footer>
+    <footer class="footer footer-minimal" aria-hidden="true"></footer>
   </div>
 
-  <script type="module" src="js/app.js?v=20260514d"></script>
+  <script type="module" src="js/app.js?v=20260514h"></script>
 </body>
 </html>

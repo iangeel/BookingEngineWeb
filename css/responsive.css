@@ -97,7 +97,6 @@
   .guest-form .guest-form-field-wide,
   .guest-form .phone-field-grid,
   .guest-form .form-feedback,
-  .guest-form .trust-banner,
   .guest-form button {
     grid-column: 1 / -1;
   }
