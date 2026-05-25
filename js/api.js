@@ -108,7 +108,12 @@ export async function updateClientData(bookingId, token, payload) {
       firstName: payload.firstName,
       lastName: payload.lastName,
       email: payload.email,
-      mobilePhoneNumber: payload.mobilePhoneNumber
+      mobilePhoneNumber: payload.mobilePhoneNumber,
+      city: payload.city,
+      countryName: payload.countryName,
+      state: payload.state,
+      postalCode: payload.postalCode,
+      addressDetails: payload.addressDetails
     })
   });
 
