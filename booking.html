@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/themes/pursisimpluvama_theme.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/styles.css?v=20260525a">
+  <link rel="stylesheet" href="css/themes/pursisimpluvama_theme.css?v=20260525a">
+  <link rel="stylesheet" href="css/responsive.css?v=20260525a">
 </head>
 <body data-page="booking">
   <div class="site-shell">
@@ -72,6 +72,26 @@
                 <input id="mobilePhoneNumber" name="mobilePhoneNumber" type="tel" autocomplete="tel" inputmode="tel" required>
               </label>
             </div>
+            <label for="city">
+              <span data-i18n="labelCity">Oras</span>
+              <input id="city" name="city" type="text" autocomplete="address-level2" required>
+            </label>
+            <label for="countryName">
+              <span data-i18n="labelCountry">Tara</span>
+              <input id="countryName" name="countryName" type="text" autocomplete="country-name" value="Romania" readonly aria-readonly="true" required>
+            </label>
+            <label for="state">
+              <span data-i18n="labelState">Judet / regiune</span>
+              <input id="state" name="state" type="text" autocomplete="address-level1" required>
+            </label>
+            <label for="postalCode">
+              <span data-i18n="labelPostalCode">Cod postal</span>
+              <input id="postalCode" name="postalCode" type="text" autocomplete="postal-code" required>
+            </label>
+            <label class="guest-form-field-wide" for="addressDetails">
+              <span data-i18n="labelAddressDetails">Adresa</span>
+              <input id="addressDetails" name="addressDetails" type="text" autocomplete="street-address" required>
+            </label>
             <label class="guest-form-field-wide">
               <span data-i18n="labelGuests">Persoane</span>
               <div class="readonly-field" data-booking-guests-display aria-live="polite"></div>
@@ -86,6 +106,6 @@
     <footer class="footer footer-minimal" aria-hidden="true"></footer>
   </div>
 
-  <script type="module" src="js/app.js?v=20260514h"></script>
+  <script type="module" src="js/app.js?v=20260525a"></script>
 </body>
 </html>

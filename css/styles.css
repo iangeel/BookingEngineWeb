@@ -1012,3 +1012,312 @@ select:focus {
   padding: 1.5rem;
   text-align: center;
 }
+
+
+.footer-minimal {
+  min-height: auto;
+  padding: 1.5rem 0 0.5rem;
+  border-top: 1px solid rgba(141, 84, 48, 0.12);
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+.compliance-footer,
+.compliance-footer__top,
+.compliance-footer__aside,
+.compliance-footer__actions,
+.compliance-badges,
+.compliance-company-block,
+.compliance-company-block__contacts,
+.compliance-payment-block,
+.compliance-modal__header,
+.compliance-modal__nav {
+  display: grid;
+  gap: 1rem;
+}
+
+.compliance-footer__top {
+  grid-template-columns: 1fr;
+}
+
+.compliance-footer {
+  font-family: "Manrope", sans-serif;
+  color: rgba(14, 96, 72, 0.94);
+}
+
+.compliance-footer .eyebrow,
+.compliance-company-block__label,
+.compliance-payment-block__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+.compliance-footer__intro h2,
+.compliance-modal__header h2,
+.compliance-section h3 {
+  margin: 0;
+}
+
+.compliance-footer__intro h2 {
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(1.15rem, 1.4vw, 1.45rem);
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: rgba(12, 91, 70, 0.96);
+}
+
+.compliance-footer__intro p,
+.compliance-company-block span,
+.compliance-company-block strong,
+.compliance-modal__header p,
+.compliance-section p,
+.compliance-list li {
+  margin: 0;
+}
+
+.compliance-footer__actions,
+.compliance-modal__nav,
+.compliance-company-block__contacts {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.compliance-link,
+.compliance-modal__nav-button,
+.compliance-modal__close {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(0, 181, 125, 0.12);
+  color: rgba(13, 103, 77, 0.92);
+  padding: 0.65rem 0.95rem;
+  font-weight: 700;
+  font-size: 0.94rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.compliance-link:hover,
+.compliance-link:focus-visible,
+.compliance-modal__nav-button:hover,
+.compliance-modal__nav-button:focus-visible,
+.compliance-modal__close:hover,
+.compliance-modal__close:focus-visible {
+  background: rgba(234, 211, 184, 0.5);
+}
+
+.compliance-modal__nav-button.is-active {
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  color: white;
+  border-color: transparent;
+}
+
+.compliance-footer__aside {
+  align-content: start;
+}
+
+.compliance-payment-block,
+.compliance-badges-block,
+.compliance-company-block {
+  padding: 1rem 1.05rem;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(0, 181, 125, 0.1);
+  box-shadow: 0 10px 20px rgba(0, 90, 62, 0.04);
+}
+
+.compliance-payment-block__label,
+.compliance-company-block__label {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(14, 111, 82, 0.82);
+}
+
+.compliance-badges {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.compliance-badge-link {
+  display: grid;
+  place-items: center;
+  min-height: 5.25rem;
+  padding: 0.75rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(0, 181, 125, 0.1);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.compliance-badge-link:hover,
+.compliance-badge-link:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(0, 181, 125, 0.22);
+  box-shadow: 0 10px 20px rgba(0, 90, 62, 0.06);
+}
+
+.compliance-badge-image {
+  display: block;
+  width: 100%;
+  max-width: 9.25rem;
+  height: auto;
+}
+
+.compliance-payment-block__mark {
+  min-height: 4rem;
+  display: grid;
+  align-items: center;
+  justify-items: start;
+}
+
+.compliance-payment-block__logo-link {
+  display: inline-flex;
+}
+
+.compliance-payment-block__logo-shell {
+  display: grid;
+  align-items: center;
+  justify-items: start;
+  width: 100%;
+  border-radius: 0.9rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.compliance-payment-block__logo-shell--vertical {
+  max-width: 150px;
+  min-height: 100px;
+}
+
+.compliance-payment-block__logo-shell--horizontal {
+  max-width: 250px;
+  min-height: 50px;
+}
+
+.compliance-payment-block__logo-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.compliance-payment-block__fallback {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: rgba(14, 96, 72, 0.88);
+}
+
+.compliance-footer__intro .note,
+.compliance-company-block span,
+.compliance-company-block strong {
+  font-family: "Manrope", sans-serif;
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.compliance-footer__intro .note,
+.compliance-company-block span {
+  color: rgba(25, 92, 74, 0.82);
+}
+
+.compliance-company-block strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: rgba(10, 82, 63, 0.96);
+}
+
+.compliance-company-block__contacts a {
+  font-weight: 700;
+  color: rgba(10, 112, 82, 0.94);
+  font-size: 0.96rem;
+}
+
+.compliance-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.compliance-modal[hidden] {
+  display: none;
+}
+
+.compliance-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(46, 36, 29, 0.48);
+}
+
+.compliance-modal__dialog {
+  position: relative;
+  width: min(100%, 52rem);
+  max-height: min(90vh, 50rem);
+  overflow: auto;
+  padding: 1.5rem;
+  border-radius: var(--radius-xl);
+  background: rgba(255, 252, 247, 0.98);
+  border: var(--border);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.compliance-modal.is-visible .compliance-modal__dialog {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.compliance-modal__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(141, 84, 48, 0.14);
+}
+
+.compliance-modal__body {
+  display: grid;
+  gap: 1.5rem;
+  padding-top: 1.25rem;
+}
+
+.compliance-section {
+  display: grid;
+  gap: 0.9rem;
+  scroll-margin-top: 1rem;
+}
+
+.compliance-section + .compliance-section {
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(141, 84, 48, 0.1);
+}
+
+.compliance-list {
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1.2rem;
+  margin: 0;
+}
+
+.room-description {
+  color: var(--text-soft);
+}
+
+@media (min-width: 900px) {
+  .compliance-footer__top {
+    grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 1fr);
+    align-items: start;
+  }
+
+  .compliance-modal {
+    padding: 2rem;
+  }
+
+  .compliance-modal__dialog {
+    padding: 1.75rem;
+  }
+}
