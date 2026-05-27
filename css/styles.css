@@ -425,6 +425,17 @@ select:focus {
   box-shadow: var(--shadow-sm);
 }
 
+.button-status-failed {
+  color: var(--danger);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(169, 77, 63, 0.18);
+}
+
+.button-status-failed:hover,
+.button-status-failed:focus-visible {
+  background: rgba(255, 239, 237, 0.98);
+}
+
 .button-secondary {
   color: var(--text);
   background: rgba(255, 251, 246, 0.88);

@@ -1427,7 +1427,8 @@ async function renderConfirmationPage() {
         body: t("confirmationFailedBody"),
         action: t("confirmationFailedAction"),
         href: "booking.html",
-        className: "status-failed"
+        className: "status-failed",
+        actionClassName: "button-status-failed"
       }
     }[uiStatus];
 
@@ -1444,7 +1445,7 @@ async function renderConfirmationPage() {
         ${t("paymentState")} <strong>${formatPaymentStatus(uiStatus)}</strong>
       </div>
       <div class="status-actions">
-        <a href="${variantCopy.href}" class="button button-primary"${state.payment?.paymentUrl && uiStatus === "PENDING" ? ' target="_blank" rel="noreferrer"' : ""}>${variantCopy.action}</a>
+        <a href="${variantCopy.href}" class="button button-primary${variantCopy.actionClassName ? ` ${variantCopy.actionClassName}` : ""}"${state.payment?.paymentUrl && uiStatus === "PENDING" ? ' target="_blank" rel="noreferrer"' : ""}>${variantCopy.action}</a>
       </div>
     `;
 
