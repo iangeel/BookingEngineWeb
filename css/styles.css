@@ -583,6 +583,27 @@ select:focus {
 
 .room-card-media {
   position: relative;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: zoom-in;
+  text-align: left;
+}
+
+.room-card-media::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 4px solid rgba(12, 91, 70, 0.96);
+  border-radius: var(--radius-xl);
+  pointer-events: none;
+}
+
+.room-card-media img {
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.74);
 }
 
 .room-badge {
@@ -637,6 +658,109 @@ select:focus {
 .price {
   font-size: 2rem;
   font-weight: 800;
+}
+
+.room-gallery-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.room-gallery-modal[hidden] {
+  display: none;
+}
+
+.room-gallery-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 34, 27, 0.62);
+}
+
+.room-gallery-modal__dialog {
+  position: relative;
+  width: min(100%, 64rem);
+  max-height: min(92vh, 58rem);
+  overflow: auto;
+  padding: 1rem;
+  border-radius: var(--radius-xl);
+  background: rgba(255, 252, 247, 0.98);
+  border: 1px solid rgba(0, 181, 125, 0.14);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.room-gallery-modal.is-visible .room-gallery-modal__dialog {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.room-gallery-modal__header,
+.room-gallery-modal__body,
+.room-gallery-modal__thumbs {
+  display: grid;
+  gap: 1rem;
+}
+
+.room-gallery-modal__header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.room-gallery-modal__header h2 {
+  margin: 0;
+}
+
+.room-gallery-modal__close {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 181, 125, 0.16);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.room-gallery-modal__preview {
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 4px solid rgba(12, 91, 70, 0.96);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.room-gallery-modal__preview img {
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  object-fit: cover;
+}
+
+.room-gallery-modal__thumbs {
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+}
+
+.room-gallery-modal__thumb {
+  padding: 0;
+  border: 2px solid rgba(0, 181, 125, 0.12);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+
+.room-gallery-modal__thumb.is-active {
+  border-color: rgba(12, 91, 70, 0.96);
+  box-shadow: 0 10px 18px rgba(0, 90, 62, 0.08);
+}
+
+.room-gallery-modal__thumb img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
 }
 
 .filters-strip p,

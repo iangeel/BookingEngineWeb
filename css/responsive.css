@@ -105,6 +105,10 @@
     grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.2fr);
   }
 
+  .room-gallery-modal__dialog {
+    padding: 1.25rem;
+  }
+
   .admin-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

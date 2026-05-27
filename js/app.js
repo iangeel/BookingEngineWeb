@@ -4,8 +4,8 @@ import {
   getBookingStatus,
   initiatePayment,
   updateClientData
-} from "./api.js?v=20260522b";
-import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260525a";
+} from "./api.js?v=20260525b";
+import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260525b";
 
 const STORAGE_KEY = "aurelia-booking-flow";
 const LANGUAGE_KEY = "booking-engine-language";
@@ -15,6 +15,8 @@ const CONFIRMATION_POLL_ATTEMPTS = 6;
 const CONFIRMATION_POLL_DELAY_MS = 2000;
 const FIXED_COUNTRY_NAME = "Romania";
 const COMPLIANCE_MODAL_ID = "site-compliance-modal";
+const ROOM_GALLERY_MODAL_ID = "room-gallery-modal";
+const DEFAULT_ROOM_COVER = "assets/normal-property-view.png";
 const LOCALES = {
   ro: "ro-RO",
   en: "en-US"
@@ -145,6 +147,8 @@ const TRANSLATIONS = {
     availabilityErrorNote: "Te rugam sa incerci din nou in cateva momente.",
     preparingRoom: "Se pregateste...",
     roomSelectionError: "Nu am putut pregati aceasta camera acum. Te rugam sa incerci din nou.",
+    roomGalleryOpen: "Vezi galeria camerei",
+    roomGalleryClose: "Inchide galeria",
     bookingSubmitError: "Nu am putut continua rezervarea acum. Te rugam sa incerci din nou.",
     bookingPhoneRequired: "Introdu un numar de telefon valid pentru a continua.",
     emptyFlowTitle: "Nicio rezervare selectata",
@@ -261,6 +265,8 @@ const TRANSLATIONS = {
     availabilityErrorNote: "Please try again in a few moments.",
     preparingRoom: "Preparing...",
     roomSelectionError: "We couldn't prepare this room right now. Please try again.",
+    roomGalleryOpen: "View room gallery",
+    roomGalleryClose: "Close gallery",
     bookingSubmitError: "We couldn't continue the booking right now. Please try again.",
     bookingPhoneRequired: "Enter a valid phone number to continue.",
     emptyFlowTitle: "No booking selected",
@@ -660,8 +666,122 @@ function resolveRoomDescription(roomName) {
   return THEME_SITE_CONTENT.roomDescriptions.find((entry) => normalizedName.includes(entry.match));
 }
 
+function getRoomMedia(room) {
+  const matchedRoom = resolveRoomDescription(room?.name || room?.roomName || room?.roomNames?.[0] || "");
+
+  return {
+    coverImage: matchedRoom?.coverImage || DEFAULT_ROOM_COVER,
+    galleryImages: Array.isArray(matchedRoom?.galleryImages) && matchedRoom.galleryImages.length
+      ? matchedRoom.galleryImages
+      : [matchedRoom?.coverImage || DEFAULT_ROOM_COVER]
+  };
+}
+
 function normalizeRoomName(roomName) {
   return String(roomName || "").replaceAll(/\s+/g, " ").trim();
+}
+
+function ensureRoomGalleryModal() {
+  if (document.getElementById(ROOM_GALLERY_MODAL_ID)) {
+    return;
+  }
+
+  const modal = document.createElement("div");
+  modal.className = "room-gallery-modal";
+  modal.id = ROOM_GALLERY_MODAL_ID;
+  modal.dataset.roomGalleryModal = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="room-gallery-modal__backdrop" data-room-gallery-close></div>
+    <div class="room-gallery-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="${ROOM_GALLERY_MODAL_ID}-title">
+      <header class="room-gallery-modal__header">
+        <h2 id="${ROOM_GALLERY_MODAL_ID}-title"></h2>
+        <button class="room-gallery-modal__close" type="button" data-room-gallery-close aria-label="${t("roomGalleryClose")}">${t("roomGalleryClose")}</button>
+      </header>
+      <div class="room-gallery-modal__body">
+        <div class="room-gallery-modal__preview">
+          <img data-room-gallery-image src="" alt="">
+        </div>
+        <div class="room-gallery-modal__thumbs" data-room-gallery-thumbs></div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelectorAll("[data-room-gallery-close]").forEach((button) => {
+    button.addEventListener("click", () => closeRoomGallery());
+  });
+
+  if (!window.__roomGalleryKeydownBound) {
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeRoomGallery();
+      }
+    });
+    window.__roomGalleryKeydownBound = true;
+  }
+}
+
+function openRoomGallery(room) {
+  const modal = document.querySelector("[data-room-gallery-modal]");
+
+  if (!modal) {
+    return;
+  }
+
+  const media = getRoomMedia(room);
+  const title = modal.querySelector(`#${ROOM_GALLERY_MODAL_ID}-title`);
+  const previewImage = modal.querySelector("[data-room-gallery-image]");
+  const thumbs = modal.querySelector("[data-room-gallery-thumbs]");
+
+  if (!title || !previewImage || !thumbs) {
+    return;
+  }
+
+  title.textContent = room.name;
+  thumbs.innerHTML = media.galleryImages.map((image, index) => `
+    <button class="room-gallery-modal__thumb${index === 0 ? " is-active" : ""}" type="button" data-room-gallery-thumb="${index}" aria-label="${room.name} ${index + 1}">
+      <img src="${image}" alt="${room.name} ${index + 1}">
+    </button>
+  `).join("");
+
+  const setActiveImage = (imageIndex) => {
+    const source = media.galleryImages[imageIndex] || media.galleryImages[0];
+    previewImage.src = source;
+    previewImage.alt = `${room.name} ${imageIndex + 1}`;
+
+    thumbs.querySelectorAll("[data-room-gallery-thumb]").forEach((button) => {
+      button.classList.toggle("is-active", Number(button.dataset.roomGalleryThumb) === imageIndex);
+    });
+  };
+
+  thumbs.querySelectorAll("[data-room-gallery-thumb]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setActiveImage(Number(button.dataset.roomGalleryThumb));
+    });
+  });
+
+  setActiveImage(0);
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  requestAnimationFrame(() => modal.classList.add("is-visible"));
+}
+
+function closeRoomGallery() {
+  const modal = document.querySelector("[data-room-gallery-modal]");
+
+  if (!modal || modal.hidden) {
+    return;
+  }
+
+  modal.classList.remove("is-visible");
+  document.body.classList.remove("modal-open");
+  window.setTimeout(() => {
+    if (!modal.classList.contains("is-visible")) {
+      modal.hidden = true;
+    }
+  }, 140);
 }
 
 function escapeHtml(value) {
@@ -935,6 +1055,19 @@ async function renderRoomsPage() {
         </article>
       `;
 
+    ensureRoomGalleryModal();
+
+    roomList.querySelectorAll("[data-open-room-gallery]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const optionId = button.dataset.openRoomGallery;
+        const room = rooms.find((item) => item.optionId === optionId);
+
+        if (room) {
+          openRoomGallery(room);
+        }
+      });
+    });
+
     roomList.querySelectorAll("[data-select-room]").forEach((button) => {
       button.addEventListener("click", async () => {
         const originalLabel = button.textContent;
@@ -945,12 +1078,17 @@ async function renderRoomsPage() {
 
           const optionId = button.dataset.selectRoom;
           const room = rooms.find((item) => item.optionId === optionId);
+          const media = room ? getRoomMedia(room) : null;
 
           if (!room) {
             throw new Error(t("roomSelectionError"));
           }
 
-          state.room = room;
+          state.room = {
+            ...room,
+            image: media?.coverImage,
+            galleryImages: media?.galleryImages
+          };
           state.payment = null;
           const bookingResponse = await createBooking({
             roomId: room.id,
@@ -960,8 +1098,10 @@ async function renderRoomsPage() {
             endDate: state.stay.checkout
           });
 
-      state.room = {
+          state.room = {
             ...room,
+            image: media?.coverImage,
+            galleryImages: media?.galleryImages,
             name: bookingResponse.data.roomName || room.name,
             capacity: bookingResponse.data.totalCapacity ?? bookingResponse.data.roomCapacity ?? room.totalCapacity ?? room.capacity,
             totalRateForStay: room.totalRateForStay ?? null
@@ -1344,13 +1484,14 @@ async function renderConfirmationPage() {
 
 function roomCardTemplate(room) {
   const description = describeRoom(room);
+  const media = getRoomMedia(room);
 
   return `
     <article class="room-card">
-      <div class="room-card-media">
-        <img src="${room.image}" alt="${room.name}">
+      <button class="room-card-media" type="button" data-open-room-gallery="${room.optionId}" aria-label="${t("roomGalleryOpen")}: ${room.name}">
+        <img src="${media.coverImage}" alt="${room.name}">
         <span class="room-badge">${t("roomBadgeUpTo", { count: room.capacity })}</span>
-      </div>
+      </button>
       <div class="room-card-body">
         <div class="room-card-header">
           <p class="eyebrow">${room.packageOption ? t("packageRoom") : t("singleRoom")}</p>
@@ -1385,14 +1526,16 @@ function buildRoomSummary(roomState, bookingState) {
         : roomState?.name
           ? [roomState.name]
           : [t("selectedRoom")];
+  const media = getRoomMedia(roomState || bookingState || { name: roomNames.join(" + ") });
 
   const summary = {
-    image: roomState?.image || "assets/room-terrace.svg",
+    image: roomState?.image || media.coverImage,
     name: bookingState?.roomName || roomState?.name || roomNames.join(" + "),
     capacity: bookingState?.totalCapacity ?? bookingState?.roomCapacity ?? roomState?.totalCapacity ?? roomState?.capacity ?? state.stay.guests,
     roomCount: bookingState?.roomCount ?? roomState?.roomCount ?? roomNames.length,
     roomNames,
-    totalRateForStay: bookingState?.totalRateForStay ?? roomState?.totalRateForStay ?? null
+    totalRateForStay: bookingState?.totalRateForStay ?? roomState?.totalRateForStay ?? null,
+    galleryImages: roomState?.galleryImages || media.galleryImages
   };
 
   return {

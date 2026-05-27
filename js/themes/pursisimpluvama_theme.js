@@ -42,6 +42,14 @@ export const THEME_SITE_CONTENT = {
   roomDescriptions: [
     {
       match: "double rooms with garden view",
+      coverImage: "assets/double-room.jpg",
+      galleryImages: [
+        "assets/normal-property-view.png",
+        "assets/drone-property-view.png",
+        "assets/room-garden.png",
+        "assets/double-room.jpg",
+        "assets/toilet.jpg"
+      ],
       description: {
         ro: "Camera pentru 2 persoane, cu vedere la gradina, potrivita pentru sejururi directe la malul marii.",
         en: "Room for 2 guests with garden view, suited for direct seaside stays."
@@ -49,6 +57,14 @@ export const THEME_SITE_CONTENT = {
     },
     {
       match: "twin rooms with garden view",
+      coverImage: "assets/twin-room.jpg",
+      galleryImages: [
+        "assets/normal-property-view.png",
+        "assets/drone-property-view.png",
+        "assets/room-garden.png",
+        "assets/twin-room.jpg",
+        "assets/toilet.jpg"
+      ],
       description: {
         ro: "Camera pentru 2 persoane, cu doua paturi separate si vedere la gradina.",
         en: "Room for 2 guests with two separate beds and garden view."
