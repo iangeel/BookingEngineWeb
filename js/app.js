@@ -795,6 +795,13 @@ function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#96;");
 }
 
+function linkifyPhoneText(text) {
+  return escapeHtml(text).replace(
+    /(\+?\d(?:[\d\s()-]{5,}\d))/,
+    (match) => `<a class="text-link text-link-inline" href="tel:${escapeAttribute(match.replaceAll(/\s+/g, " ").trim())}">${match}</a>`
+  );
+}
+
 function loadState() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -1427,8 +1434,7 @@ async function renderConfirmationPage() {
         body: t("confirmationFailedBody"),
         action: t("confirmationFailedAction"),
         href: "booking.html",
-        className: "status-failed",
-        actionClassName: "button-status-failed"
+        className: "status-failed"
       }
     }[uiStatus];
 
@@ -1438,14 +1444,14 @@ async function renderConfirmationPage() {
         <p class="eyebrow">${t("statusLabel")}</p>
         <span class="status-pill ${variantCopy.className}">${variantCopy.title}</span>
         <h2>${variantCopy.title}</h2>
-        <p>${variantCopy.body}</p>
+        <p>${uiStatus === "FAILED" ? linkifyPhoneText(variantCopy.body) : escapeHtml(variantCopy.body)}</p>
       </div>
       <div class="status-meta">
         ${t("bookingReference")} <strong>${state.booking.id.slice(0, 8).toUpperCase()}</strong><br>
         ${t("paymentState")} <strong>${formatPaymentStatus(uiStatus)}</strong>
       </div>
       <div class="status-actions">
-        <a href="${variantCopy.href}" class="button button-primary${variantCopy.actionClassName ? ` ${variantCopy.actionClassName}` : ""}"${state.payment?.paymentUrl && uiStatus === "PENDING" ? ' target="_blank" rel="noreferrer"' : ""}>${variantCopy.action}</a>
+        <a href="${variantCopy.href}" class="button button-primary"${state.payment?.paymentUrl && uiStatus === "PENDING" ? ' target="_blank" rel="noreferrer"' : ""}>${variantCopy.action}</a>
       </div>
     `;
 
