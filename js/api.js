@@ -1,9 +1,4 @@
 const API_BASE_URL = globalThis.BOOKING_API_BASE_URL || "/api";
-const ROOM_IMAGES = [
-  "assets/room-terrace.svg",
-  "assets/room-pavilion.svg",
-  "assets/room-signature.svg"
-];
 
 async function request(path, options = {}) {
   const headers = {
@@ -54,7 +49,6 @@ function toFrontendRoom(room, index) {
     totalCapacity: room.totalCapacity ?? room.capacity,
     totalRateForStay: room.totalRateForStay ?? room.totalRatePerNight ?? null,
     packageOption: Boolean(room.packageOption),
-    image: ROOM_IMAGES[index % ROOM_IMAGES.length],
     availableDates: (room.availableDates || []).map(normalizeDate)
   };
 }
