@@ -4,8 +4,8 @@ import {
   getBookingStatus,
   initiatePayment,
   updateClientData
-} from "./api.js?v=20260525b";
-import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260525b";
+} from "./api.js?v=20260527b";
+import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260527b";
 
 const STORAGE_KEY = "aurelia-booking-flow";
 const LANGUAGE_KEY = "booking-engine-language";
