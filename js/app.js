@@ -4,8 +4,8 @@ import {
   getBookingStatus,
   initiatePayment,
   updateClientData
-} from "./api.js?v=20260525b";
-import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260525b";
+} from "./api.js?v=20260527b";
+import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260527b";
 
 const STORAGE_KEY = "aurelia-booking-flow";
 const LANGUAGE_KEY = "booking-engine-language";
@@ -163,7 +163,7 @@ const TRANSLATIONS = {
     confirmationSyncTitle: "Verificam statusul platii",
     confirmationSyncBody: "Te rugam sa astepti cateva secunde cat confirmam raspunsul procesatorului.",
     confirmationFailedTitle: "Plata a esuat",
-    confirmationFailedBody: "Selectia camerei ramane vizibila pentru ca persoana sa poata incerca din nou sau sa actualizeze datele.",
+    confirmationFailedBody: "Puteti reincerca o noua rezervare sau suna direct la receptie pentru asistenta: +40 787 777 397.",
     confirmationFailedAction: "Incearca din nou",
     buttonContinueToPaymentPage: "Continua catre plata",
     bookingReference: "Referinta rezervare",
@@ -175,7 +175,6 @@ const TRANSLATIONS = {
     summaryEyebrow: "Rezumat rezervare",
     selectedRoom: "Camera selectata",
     totalStayEstimate: "Cost total estimat",
-    nextBackendNote: "Statusul rezervarii este preluat din backend si se actualizeaza automat cat timp raspunsul platii este in curs de confirmare.",
     guestFallback: "Persoana",
     roomBadgeUpTo: "Pana la {count} persoane",
     premiumRoom: "Camera disponibila",
@@ -281,7 +280,7 @@ const TRANSLATIONS = {
     confirmationSyncTitle: "We're checking the payment status",
     confirmationSyncBody: "Please wait a few seconds while we confirm the processor response.",
     confirmationFailedTitle: "Payment failed",
-    confirmationFailedBody: "The room selection remains visible so the person can retry or update details.",
+    confirmationFailedBody: "You can retry a new booking or call the reception directly for assistance: +40 787 777 397.",
     confirmationFailedAction: "Try again",
     buttonContinueToPaymentPage: "Continue to payment",
     bookingReference: "Booking reference",
@@ -293,7 +292,6 @@ const TRANSLATIONS = {
     summaryEyebrow: "Reservation summary",
     selectedRoom: "Selected room",
     totalStayEstimate: "Total stay estimate",
-    nextBackendNote: "The booking status comes from the backend and refreshes automatically while the payment response is still being confirmed.",
     guestFallback: "Person",
     roomBadgeUpTo: "Up to {count} people",
     premiumRoom: "Available room",
@@ -795,6 +793,13 @@ function escapeHtml(value) {
 
 function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#96;");
+}
+
+function linkifyPhoneText(text) {
+  return escapeHtml(text).replace(
+    /(\+?\d(?:[\d\s()-]{5,}\d))/,
+    (match) => `<a class="text-link text-link-inline" href="tel:${escapeAttribute(match.replaceAll(/\s+/g, " ").trim())}">${match}</a>`
+  );
 }
 
 function loadState() {
@@ -1439,7 +1444,7 @@ async function renderConfirmationPage() {
         <p class="eyebrow">${t("statusLabel")}</p>
         <span class="status-pill ${variantCopy.className}">${variantCopy.title}</span>
         <h2>${variantCopy.title}</h2>
-        <p>${variantCopy.body}</p>
+        <p>${uiStatus === "FAILED" ? linkifyPhoneText(variantCopy.body) : escapeHtml(variantCopy.body)}</p>
       </div>
       <div class="status-meta">
         ${t("bookingReference")} <strong>${state.booking.id.slice(0, 8).toUpperCase()}</strong><br>
@@ -1468,7 +1473,6 @@ async function renderConfirmationPage() {
         <span>${t("totalStayEstimate")}</span>
         <strong>${formatRate(room.totalRateForStay)}</strong>
       </div>
-      <p class="note">${t("nextBackendNote")}</p>
     `;
   } catch (error) {
     statusNode.innerHTML = `

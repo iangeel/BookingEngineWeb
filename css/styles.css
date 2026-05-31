@@ -528,6 +528,15 @@ select:focus {
   font-weight: 700;
 }
 
+.text-link-inline {
+  display: inline;
+  margin-top: 0;
+  color: var(--accent-strong);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
 .section-heading {
   align-items: end;
 }
@@ -646,6 +655,12 @@ select:focus {
   border-radius: 999px;
   background: var(--bg-soft);
   border: var(--border);
+}
+
+.status-actions a.button.button-primary {
+  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  border: 0;
 }
 
 .price-row {
