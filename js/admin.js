@@ -10,8 +10,8 @@ import {
   isAdminUnauthorizedError,
   updateAdminBooking,
   updateAdminRoom
-} from "./api.js?v=20260514e";
-import { THEME_BRAND } from "./themes/pursisimpluvama_theme.js?v=20260514f";
+} from "./api.js?v=20260531a";
+import { THEME_BRAND } from "./themes/pursisimpluvama_theme.js?v=20260531a";
 
 const LANGUAGE_KEY = "booking-engine-language";
 const ADMIN_AUTH_KEY = "booking-engine-admin-auth";
@@ -88,6 +88,7 @@ const TRANSLATIONS = {
     labelClientFirstName: "Prenume client",
     labelClientLastName: "Nume client",
     labelClientEmail: "Email client",
+    labelClientPhone: "Telefon client",
     labelLockedUntil: "Blocat pana la",
     labelToken: "Token rezervare",
     roomTableName: "Nume",
@@ -100,6 +101,7 @@ const TRANSLATIONS = {
     bookingTableGuests: "Oaspeti",
     bookingTableStatus: "Status",
     bookingTableClient: "Client",
+    bookingTablePhone: "Telefon",
     bookingTableUpdated: "Actualizat",
     tableActions: "Actiuni",
     bookingsEmpty: "Nu exista rezervari in acest moment.",
@@ -188,6 +190,7 @@ const TRANSLATIONS = {
     labelClientFirstName: "Client first name",
     labelClientLastName: "Client last name",
     labelClientEmail: "Client email",
+    labelClientPhone: "Client phone",
     labelLockedUntil: "Locked until",
     labelToken: "Booking token",
     roomTableName: "Name",
@@ -200,6 +203,7 @@ const TRANSLATIONS = {
     bookingTableGuests: "Guests",
     bookingTableStatus: "Status",
     bookingTableClient: "Client",
+    bookingTablePhone: "Phone",
     bookingTableUpdated: "Updated",
     tableActions: "Actions",
     bookingsEmpty: "There are no bookings right now.",
@@ -680,6 +684,7 @@ function wireBookingModal() {
       clientFirstName: form.elements.clientFirstName.value,
       clientLastName: form.elements.clientLastName.value,
       clientEmail: form.elements.clientEmail.value,
+      clientPhoneNumber: form.elements.clientPhoneNumber.value,
       lockedUntil: form.elements.lockedUntil.value,
       token: form.elements.token.value.trim()
     };
@@ -839,6 +844,7 @@ function renderBookingsTable() {
           <th>${t("bookingTableGuests")}</th>
           <th>${t("bookingTableStatus")}</th>
           <th>${t("bookingTableClient")}</th>
+          <th>${t("bookingTablePhone")}</th>
           <th>${t("bookingTableUpdated")}</th>
         </tr>
       </thead>
@@ -850,6 +856,7 @@ function renderBookingsTable() {
             <td>${booking.guestCount ?? "-"}</td>
             <td><span class="status-pill">${escapeHtml(booking.status || "-")}</span></td>
             <td>${escapeHtml(formatClientName(booking))}</td>
+            <td>${booking.clientPhoneNumber ? escapeHtml(booking.clientPhoneNumber) : "-"}</td>
             <td>${formatDateTime(booking.updatedAt || booking.createdAt)}</td>
           </tr>
         `).join("")}
@@ -1036,6 +1043,7 @@ function renderBookingModal() {
   form.elements.clientFirstName.value = booking?.clientFirstName || "";
   form.elements.clientLastName.value = booking?.clientLastName || "";
   form.elements.clientEmail.value = booking?.clientEmail || "";
+  form.elements.clientPhoneNumber.value = booking?.clientPhoneNumber || "";
   form.elements.lockedUntil.value = toDateTimeLocalValue(booking?.lockedUntil);
   form.elements.token.value = booking?.token || "";
 
@@ -1232,7 +1240,7 @@ function formatStayRange(startDate, endDate) {
 
 function formatClientName(booking) {
   const fullName = `${booking.clientFirstName || ""} ${booking.clientLastName || ""}`.trim();
-  const contactParts = [booking.clientEmail, booking.clientPhoneNumber].filter(Boolean);
+  const contactParts = [booking.clientEmail].filter(Boolean);
   if (fullName && contactParts.length) {
     return `${fullName} · ${contactParts.join(" · ")}`;
   }

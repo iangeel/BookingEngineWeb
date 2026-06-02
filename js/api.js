@@ -194,6 +194,7 @@ function normalizeAdminBookingPayload(payload) {
     clientFirstName: payload.clientFirstName?.trim() || null,
     clientLastName: payload.clientLastName?.trim() || null,
     clientEmail: payload.clientEmail?.trim() || null,
+    clientPhoneNumber: payload.clientPhoneNumber?.trim() || null,
     lockedUntil: payload.lockedUntil || null,
     token: payload.token || null
   };
