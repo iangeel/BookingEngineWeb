@@ -800,6 +800,7 @@ select:focus {
 .admin-toolbar,
 .admin-summary,
 .admin-toolbar-actions,
+.admin-bookings-tools,
 .admin-tabs,
 .admin-split,
 .admin-panel-heading,
@@ -825,6 +826,27 @@ select:focus {
 .admin-toolbar,
 .admin-panel-heading {
   align-items: center;
+}
+
+.admin-bookings-tools {
+  justify-items: stretch;
+}
+
+.admin-bookings-search {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-bookings-search span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.admin-bookings-search input {
+  min-width: min(100%, 22rem);
 }
 
 .admin-summary,

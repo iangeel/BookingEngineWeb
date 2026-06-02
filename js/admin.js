@@ -65,6 +65,8 @@ const TRANSLATIONS = {
     buttonLoading: "Se incarca...",
     bookingsEyebrow: "Rezervari",
     bookingsTitle: "Administrare rezervari",
+    bookingSearchLabel: "Cauta rezervare",
+    bookingSearchPlaceholder: "Cauta dupa nume, email sau token",
     roomsEyebrow: "Camere",
     roomEditorCreate: "Creare camera",
     roomEditorEdit: "Editare camera",
@@ -105,6 +107,7 @@ const TRANSLATIONS = {
     bookingTableUpdated: "Actualizat",
     tableActions: "Actiuni",
     bookingsEmpty: "Nu exista rezervari in acest moment.",
+    bookingsEmptyFiltered: "Nu exista rezervari care sa corespunda cautarii.",
     roomsEmpty: "Nu exista camere in acest moment.",
     noRoomOptions: "Nu exista camere disponibile pentru selectie.",
     roomSelectionHint: "Selecteaza una sau mai multe camere pentru override.",
@@ -167,6 +170,8 @@ const TRANSLATIONS = {
     buttonLoading: "Loading...",
     bookingsEyebrow: "Bookings",
     bookingsTitle: "Booking management",
+    bookingSearchLabel: "Search booking",
+    bookingSearchPlaceholder: "Search by name, email, or token",
     roomsEyebrow: "Rooms",
     roomEditorCreate: "Create room",
     roomEditorEdit: "Edit room",
@@ -207,6 +212,7 @@ const TRANSLATIONS = {
     bookingTableUpdated: "Updated",
     tableActions: "Actions",
     bookingsEmpty: "There are no bookings right now.",
+    bookingsEmptyFiltered: "There are no bookings matching this search.",
     roomsEmpty: "There are no rooms right now.",
     noRoomOptions: "There are no rooms available for selection.",
     roomSelectionHint: "Select one or more rooms for the override.",
@@ -235,6 +241,7 @@ const state = {
   auth: loadAdminAuth(),
   rooms: [],
   bookings: [],
+  bookingSearchTerm: "",
   selectedBookingId: null,
   editingRoomId: null,
   roomDraft: null,
@@ -388,6 +395,10 @@ function applyLanguage() {
 
   document.querySelectorAll("[data-admin-i18n]").forEach((node) => {
     node.textContent = t(node.dataset.adminI18n);
+  });
+
+  document.querySelectorAll("[data-admin-i18n-placeholder]").forEach((node) => {
+    node.setAttribute("placeholder", t(node.dataset.adminI18nPlaceholder));
   });
 
   document.querySelectorAll("[data-admin-language-switcher]").forEach((select) => {
@@ -552,6 +563,16 @@ function wirePanelActions() {
       state.editingBookingId = null;
       setFeedback(t("bookingDeleted"), "success");
       await refreshBookings();
+    });
+  }
+
+  const searchInput = document.querySelector("[data-admin-booking-search]");
+  if (searchInput) {
+    searchInput.value = state.bookingSearchTerm;
+    searchInput.addEventListener("input", () => {
+      state.bookingSearchTerm = searchInput.value.trim();
+      renderBookingsTable();
+      renderSelectedBookingBar();
     });
   }
 }
@@ -825,6 +846,8 @@ function renderBookingsTable() {
     return;
   }
 
+  const visibleBookings = getFilteredBookings();
+
   if (state.loadingBookings) {
     container.innerHTML = `<div class="empty-state"><p>${t("buttonLoading")}</p></div>`;
     return;
@@ -832,6 +855,11 @@ function renderBookingsTable() {
 
   if (!state.bookings.length) {
     container.innerHTML = `<div class="empty-state"><p>${t("bookingsEmpty")}</p></div>`;
+    return;
+  }
+
+  if (!visibleBookings.length) {
+    container.innerHTML = `<div class="empty-state"><p>${t("bookingsEmptyFiltered")}</p></div>`;
     return;
   }
 
@@ -849,7 +877,7 @@ function renderBookingsTable() {
         </tr>
       </thead>
       <tbody>
-        ${state.bookings.map((booking) => `
+        ${visibleBookings.map((booking) => `
           <tr class="admin-booking-row${booking.id === state.selectedBookingId ? " is-selected" : ""}" data-booking-row="${booking.id}">
             <td>${escapeHtml(booking.roomName || booking.roomNames?.join(", ") || "-")}</td>
             <td>${escapeHtml(formatStayRange(booking.startDate, booking.endDate))}</td>
@@ -881,7 +909,7 @@ function renderSelectedBookingBar() {
     return;
   }
 
-  const booking = state.bookings.find((item) => item.id === state.selectedBookingId);
+  const booking = getFilteredBookings().find((item) => item.id === state.selectedBookingId);
   section.hidden = !booking;
 
   if (!booking) {
@@ -895,6 +923,27 @@ function renderSelectedBookingBar() {
     <span>${booking.guestCount ?? "-"} ${escapeHtml(t("bookingTableGuests").toLowerCase())}</span>
     <span>${escapeHtml(booking.status || "-")}</span>
   `;
+}
+
+function getFilteredBookings() {
+  const query = state.bookingSearchTerm.trim().toLowerCase();
+  if (!query) {
+    return state.bookings;
+  }
+
+  return state.bookings.filter((booking) => {
+    const haystack = [
+      booking.clientFirstName,
+      booking.clientLastName,
+      booking.clientEmail,
+      booking.token
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
 }
 
 function renderRoomModal() {
