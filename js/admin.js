@@ -1088,7 +1088,7 @@ function renderBookingModal() {
   form.elements.guestCount.value = booking?.guestCount ?? "";
   form.elements.startDate.value = booking?.startDate || "";
   form.elements.endDate.value = booking?.endDate || "";
-  form.elements.status.value = booking?.status || "";
+  form.elements.status.value = booking?.status || "CONFIRMED";
   form.elements.clientFirstName.value = booking?.clientFirstName || "";
   form.elements.clientLastName.value = booking?.clientLastName || "";
   form.elements.clientEmail.value = booking?.clientEmail || "";
