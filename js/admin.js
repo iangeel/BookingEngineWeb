@@ -10,7 +10,7 @@ import {
   isAdminUnauthorizedError,
   updateAdminBooking,
   updateAdminRoom
-} from "./api.js?v=20260531a";
+} from "./api.js?v=20260603a";
 import { THEME_BRAND } from "./themes/pursisimpluvama_theme.js?v=20260531a";
 
 const LANGUAGE_KEY = "booking-engine-language";
@@ -75,12 +75,12 @@ const TRANSLATIONS = {
     roomsInventoryTitle: "Camere existente",
     roomRatePeriodsEmpty: "Foloseste tariful de baza pentru toate datele.",
     roomRatePeriodsConfigured: "Perioade configurate",
-    labelRoomName: "Nume camera",
+    labelRoomName: "Tip camera",
+    labelRoomNumber: "Numar camera",
     labelCapacity: "Capacitate",
     labelRate: "Tarif pe noapte",
     labelDiscount: "Discount",
     labelRatePeriods: "Perioade tarifare",
-    labelPrimaryRoom: "Camera principala",
     labelIncludedRooms: "Camere incluse",
     labelGuestCount: "Numar oaspeti",
     labelStatus: "Status",
@@ -91,26 +91,30 @@ const TRANSLATIONS = {
     labelClientLastName: "Nume client",
     labelClientEmail: "Email client",
     labelClientPhone: "Telefon client",
+    labelMentions: "Mentiuni",
     labelLockedUntil: "Blocat pana la",
     labelToken: "Token rezervare",
-    roomTableName: "Nume",
+    roomTableName: "Tip",
+    roomTableNumber: "Numar",
     roomTableCapacity: "Capacitate",
     roomTableRate: "Tarif",
     roomTableDiscount: "Discount",
     roomTableUpdated: "Actualizat",
-    bookingTableRoom: "Camera",
+    bookingTableNumber: "Nr.",
+    bookingTableRoom: "Tip camera",
     bookingTableStay: "Perioada",
     bookingTableGuests: "Oaspeti",
     bookingTableStatus: "Status",
     bookingTableClient: "Client",
     bookingTablePhone: "Telefon",
+    bookingTableMentions: "Mentiuni",
     bookingTableUpdated: "Actualizat",
     tableActions: "Actiuni",
     bookingsEmpty: "Nu exista rezervari in acest moment.",
     bookingsEmptyFiltered: "Nu exista rezervari care sa corespunda cautarii.",
     roomsEmpty: "Nu exista camere in acest moment.",
     noRoomOptions: "Nu exista camere disponibile pentru selectie.",
-    roomSelectionHint: "Selecteaza una sau mai multe camere pentru override.",
+    roomSelectionHint: "Selecteaza cel putin o camera pentru rezervare.",
     fallbackClient: "Fara client",
     loginSuccess: "Autentificarea a reusit.",
     logoutSuccess: "Sesiunea administrativa a fost inchisa.",
@@ -124,7 +128,9 @@ const TRANSLATIONS = {
     bookingDeleted: "Rezervarea a fost stearsa.",
     roomDeleteConfirm: "Stergi aceasta camera?",
     bookingDeleteConfirm: "Stergi aceasta rezervare?",
-    validationRoomRequired: "Selecteaza camera principala.",
+    validationRoomRequired: "Selecteaza cel putin o camera.",
+    warningSelectAtLeastOneRoom: "Selecteaza cel putin o camera inainte sa salvezi rezervarea.",
+    warningRoomAlreadyBooked: "Una sau mai multe camere selectate sunt deja rezervate pentru perioada aleasa.",
     validationDateRange: "Data de final trebuie sa fie dupa data de inceput.",
     validationRatePeriodDateRange: "Perioada tarifara trebuie sa aiba data de final dupa sau egala cu data de inceput.",
     validationRoomFormInvalid: "Completeaza corect toate campurile obligatorii pentru camera."
@@ -180,12 +186,12 @@ const TRANSLATIONS = {
     roomsInventoryTitle: "Existing rooms",
     roomRatePeriodsEmpty: "Use the base rate for every date.",
     roomRatePeriodsConfigured: "Configured periods",
-    labelRoomName: "Room name",
+    labelRoomName: "Room type",
+    labelRoomNumber: "Room number",
     labelCapacity: "Capacity",
     labelRate: "Rate per night",
     labelDiscount: "Discount",
     labelRatePeriods: "Rate periods",
-    labelPrimaryRoom: "Primary room",
     labelIncludedRooms: "Included rooms",
     labelGuestCount: "Guest count",
     labelStatus: "Status",
@@ -196,26 +202,30 @@ const TRANSLATIONS = {
     labelClientLastName: "Client last name",
     labelClientEmail: "Client email",
     labelClientPhone: "Client phone",
+    labelMentions: "Notes",
     labelLockedUntil: "Locked until",
     labelToken: "Booking token",
-    roomTableName: "Name",
+    roomTableName: "Type",
+    roomTableNumber: "Number",
     roomTableCapacity: "Capacity",
     roomTableRate: "Rate",
     roomTableDiscount: "Discount",
     roomTableUpdated: "Updated",
-    bookingTableRoom: "Room",
+    bookingTableNumber: "No.",
+    bookingTableRoom: "Room type",
     bookingTableStay: "Stay",
     bookingTableGuests: "Guests",
     bookingTableStatus: "Status",
     bookingTableClient: "Client",
     bookingTablePhone: "Phone",
+    bookingTableMentions: "Notes",
     bookingTableUpdated: "Updated",
     tableActions: "Actions",
     bookingsEmpty: "There are no bookings right now.",
     bookingsEmptyFiltered: "There are no bookings matching this search.",
     roomsEmpty: "There are no rooms right now.",
     noRoomOptions: "There are no rooms available for selection.",
-    roomSelectionHint: "Select one or more rooms for the override.",
+    roomSelectionHint: "Select at least one room for the booking.",
     fallbackClient: "No client",
     loginSuccess: "Authentication succeeded.",
     logoutSuccess: "The admin session has been closed.",
@@ -229,7 +239,9 @@ const TRANSLATIONS = {
     bookingDeleted: "The booking was deleted.",
     roomDeleteConfirm: "Delete this room?",
     bookingDeleteConfirm: "Delete this booking?",
-    validationRoomRequired: "Select the primary room.",
+    validationRoomRequired: "Select at least one room.",
+    warningSelectAtLeastOneRoom: "Select at least one room before saving the booking.",
+    warningRoomAlreadyBooked: "One or more selected rooms are already booked for the chosen period.",
     validationDateRange: "End date must be after start date.",
     validationRatePeriodDateRange: "A rate period end date must be on or after the start date.",
     validationRoomFormInvalid: "Complete all required room fields correctly."
@@ -682,11 +694,14 @@ function wireBookingModal() {
     const submitButton = form.querySelector("[data-admin-booking-submit]");
     const originalLabel = submitButton?.textContent;
     const bookingId = form.elements.bookingId.value || null;
-    const primaryRoomId = Number(form.elements.roomId.value);
-    const selectedRoomIds = Array.from(form.querySelectorAll('input[name="roomIds"]:checked')).map((input) => Number(input.value));
+    const selectedRoomIds = Array.from(form.querySelectorAll('input[name="roomIds"]:checked'))
+      .map((input) => Number(input.value))
+      .filter(Number.isFinite);
 
-    if (!Number.isFinite(primaryRoomId)) {
-      setFeedback(t("validationRoomRequired"), "error");
+    if (!selectedRoomIds.length) {
+      const warningMessage = t("warningSelectAtLeastOneRoom");
+      setFeedback(warningMessage, "error");
+      window.alert(warningMessage);
       return;
     }
 
@@ -696,7 +711,6 @@ function wireBookingModal() {
     }
 
     const payload = {
-      roomId: primaryRoomId,
       roomIds: selectedRoomIds,
       guestCount: form.elements.guestCount.value,
       startDate: form.elements.startDate.value,
@@ -706,6 +720,7 @@ function wireBookingModal() {
       clientLastName: form.elements.clientLastName.value,
       clientEmail: form.elements.clientEmail.value,
       clientPhoneNumber: form.elements.clientPhoneNumber.value,
+      mentions: form.elements.mentions.value,
       lockedUntil: form.elements.lockedUntil.value,
       token: form.elements.token.value.trim()
     };
@@ -716,21 +731,32 @@ function wireBookingModal() {
         submitButton.textContent = t("buttonSavingBooking");
       }
 
-      const result = await runProtected(
-        () => bookingId
-          ? updateAdminBooking(state.auth.accessToken, bookingId, payload)
-          : createAdminBooking(state.auth.accessToken, payload),
-        t("bookingsLoadFailed")
-      );
-
-      if (result === null) {
-        return;
-      }
+      const result = bookingId
+        ? await updateAdminBooking(state.auth.accessToken, bookingId, payload)
+        : await createAdminBooking(state.auth.accessToken, payload);
 
       setFeedback(t("bookingSaved"), "success");
       state.editingBookingId = null;
       await refreshBookings();
       closeBookingModal();
+      return result;
+    } catch (error) {
+      if (isAdminUnauthorizedError(error)) {
+        clearAdminAuth();
+        window.location.replace("admin.html");
+        return;
+      }
+
+      if (error?.status === 409) {
+        const warningMessage = `${t("warningRoomAlreadyBooked")}
+
+${error.message || ""}`.trim();
+        setFeedback(warningMessage, "error");
+        window.alert(warningMessage);
+        return;
+      }
+
+      setFeedback(error.message || t("bookingsLoadFailed"), "error");
     } finally {
       if (submitButton) {
         submitButton.disabled = false;
@@ -867,24 +893,28 @@ function renderBookingsTable() {
     <table class="admin-table admin-bookings-table">
       <thead>
         <tr>
+          <th>${t("bookingTableNumber")}</th>
           <th>${t("bookingTableRoom")}</th>
           <th>${t("bookingTableStay")}</th>
           <th>${t("bookingTableGuests")}</th>
           <th>${t("bookingTableStatus")}</th>
           <th>${t("bookingTableClient")}</th>
           <th>${t("bookingTablePhone")}</th>
+          <th>${t("bookingTableMentions")}</th>
           <th>${t("bookingTableUpdated")}</th>
         </tr>
       </thead>
       <tbody>
         ${visibleBookings.map((booking) => `
           <tr class="admin-booking-row${booking.id === state.selectedBookingId ? " is-selected" : ""}" data-booking-row="${booking.id}">
-            <td>${escapeHtml(booking.roomName || booking.roomNames?.join(", ") || "-")}</td>
+            <td>${escapeHtml(formatBookingRoomNumbers(booking))}</td>
+            <td>${escapeHtml(formatBookingRoomTypes(booking))}</td>
             <td>${escapeHtml(formatStayRange(booking.startDate, booking.endDate))}</td>
             <td>${booking.guestCount ?? "-"}</td>
             <td><span class="status-pill">${escapeHtml(booking.status || "-")}</span></td>
             <td>${escapeHtml(formatClientName(booking))}</td>
             <td>${booking.clientPhoneNumber ? escapeHtml(booking.clientPhoneNumber) : "-"}</td>
+            <td>${booking.mentions ? escapeHtml(booking.mentions) : "-"}</td>
             <td>${formatDateTime(booking.updatedAt || booking.createdAt)}</td>
           </tr>
         `).join("")}
@@ -918,7 +948,8 @@ function renderSelectedBookingBar() {
   }
 
   meta.innerHTML = `
-    <strong>${escapeHtml(booking.roomName || booking.roomNames?.join(", ") || "-")}</strong>
+    <strong>${escapeHtml(formatBookingRoomTypes(booking))}</strong>
+    <span>${t("bookingTableNumber")}: ${escapeHtml(formatBookingRoomNumbers(booking))}</span>
     <span>${escapeHtml(formatStayRange(booking.startDate, booking.endDate))}</span>
     <span>${booking.guestCount ?? "-"} ${escapeHtml(t("bookingTableGuests").toLowerCase())}</span>
     <span>${escapeHtml(booking.status || "-")}</span>
@@ -936,6 +967,7 @@ function getFilteredBookings() {
       booking.clientFirstName,
       booking.clientLastName,
       booking.clientEmail,
+      booking.mentions,
       booking.token
     ]
       .filter(Boolean)
@@ -963,6 +995,7 @@ function renderRoomModal() {
   title.textContent = room ? t("roomEditorEdit") : t("roomEditorCreate");
   form.elements.roomId.value = draft.roomId || "";
   form.elements.name.value = draft.name || "";
+  form.elements.roomNumber.value = draft.roomNumber || "";
   form.elements.capacity.value = draft.capacity ?? "";
   form.elements.ratePerNight.value = draft.ratePerNight ?? "";
   form.elements.discount.value = draft.discount ?? "";
@@ -983,6 +1016,7 @@ function renderRoomModal() {
       <thead>
         <tr>
           <th>${t("roomTableName")}</th>
+          <th>${t("roomTableNumber")}</th>
           <th>${t("roomTableCapacity")}</th>
           <th>${t("roomTableRate")}</th>
           <th>${t("roomTableDiscount")}</th>
@@ -998,6 +1032,7 @@ function renderRoomModal() {
                 <span class="note">${formatRatePeriodsSummary(currentRoom.ratePeriods)}</span>
               </div>
             </td>
+            <td>${escapeHtml(currentRoom.roomNumber || "-")}</td>
             <td>${currentRoom.capacity ?? "-"}</td>
             <td>
               <div class="admin-rate-period-summary">
@@ -1055,19 +1090,15 @@ function renderRoomModal() {
 function renderBookingModal() {
   const title = document.querySelector("[data-admin-booking-modal-title]");
   const form = document.querySelector("[data-admin-booking-form]");
-  const primaryRoomSelect = document.querySelector("[data-admin-primary-room]");
   const roomOptions = document.querySelector("[data-admin-room-options]");
 
-  if (!title || !form || !primaryRoomSelect || !roomOptions) {
+  if (!title || !form || !roomOptions) {
     return;
   }
 
   const booking = state.bookings.find((item) => item.id === state.editingBookingId);
 
   title.textContent = booking ? t("bookingEditorEdit") : t("bookingEditorCreate");
-  primaryRoomSelect.innerHTML = state.rooms.length
-    ? state.rooms.map((room) => `<option value="${room.id}">${escapeHtml(room.name)}</option>`).join("")
-    : `<option value="">${t("noRoomOptions")}</option>`;
 
   roomOptions.innerHTML = state.rooms.length
     ? `
@@ -1076,7 +1107,7 @@ function renderBookingModal() {
         ${state.rooms.map((room) => `
           <label class="admin-room-option">
             <input type="checkbox" name="roomIds" value="${room.id}">
-            <span>${escapeHtml(room.name)} · ${room.capacity ?? "-"} · ${formatCurrency(room.ratePerNight)}</span>
+            <span>${escapeHtml(formatRoomLabel(room))} · ${formatCurrency(room.ratePerNight)}</span>
           </label>
         `).join("")}
       </div>
@@ -1084,7 +1115,6 @@ function renderBookingModal() {
     : `<div class="empty-state"><p>${t("noRoomOptions")}</p></div>`;
 
   form.elements.bookingId.value = booking?.id || "";
-  form.elements.roomId.value = booking?.roomId || state.rooms[0]?.id || "";
   form.elements.guestCount.value = booking?.guestCount ?? "";
   form.elements.startDate.value = booking?.startDate || "";
   form.elements.endDate.value = booking?.endDate || "";
@@ -1093,6 +1123,7 @@ function renderBookingModal() {
   form.elements.clientLastName.value = booking?.clientLastName || "";
   form.elements.clientEmail.value = booking?.clientEmail || "";
   form.elements.clientPhoneNumber.value = booking?.clientPhoneNumber || "";
+  form.elements.mentions.value = booking?.mentions || "";
   form.elements.lockedUntil.value = toDateTimeLocalValue(booking?.lockedUntil);
   form.elements.token.value = booking?.token || "";
 
@@ -1106,6 +1137,7 @@ function createRoomDraft(room = {}) {
   return {
     roomId: room?.id || "",
     name: room?.name || "",
+    roomNumber: room?.roomNumber || "",
     capacity: room?.capacity ?? "",
     ratePerNight: room?.ratePerNight ?? "",
     discount: room?.discount ?? "",
@@ -1131,6 +1163,7 @@ function collectRoomDraftFromForm(form) {
   return {
     roomId: form.elements.roomId.value || "",
     name: form.elements.name.value,
+    roomNumber: form.elements.roomNumber.value,
     capacity: form.elements.capacity.value,
     ratePerNight: form.elements.ratePerNight.value,
     discount: form.elements.discount.value,
@@ -1217,7 +1250,34 @@ function sortBookings(bookings) {
 }
 
 function sortRooms(rooms) {
-  return [...rooms].sort((left, right) => Number(left.id || 0) - Number(right.id || 0));
+  return [...rooms].sort((left, right) => {
+    const leftNumber = Number.parseInt(left.roomNumber, 10);
+    const rightNumber = Number.parseInt(right.roomNumber, 10);
+    const bothNumeric = Number.isFinite(leftNumber) && Number.isFinite(rightNumber);
+
+    if (bothNumeric && leftNumber !== rightNumber) {
+      return leftNumber - rightNumber;
+    }
+
+    const labelCompare = formatRoomLabel(left).localeCompare(formatRoomLabel(right), undefined, { numeric: true, sensitivity: "base" });
+    if (labelCompare !== 0) {
+      return labelCompare;
+    }
+
+    return Number(left.id || 0) - Number(right.id || 0);
+  });
+}
+
+function formatRoomLabel(room) {
+  if (!room) {
+    return "";
+  }
+
+  if (!room.roomNumber) {
+    return room.name || "";
+  }
+
+  return `${room.name || ""} - ${room.roomNumber}`.trim();
 }
 
 function upsertBooking(booking) {
@@ -1248,6 +1308,22 @@ function formatPercent(value) {
   }
 
   return `${Math.round(Number(value) * 100)}%`;
+}
+
+function formatBookingRoomTypes(booking) {
+  if (Array.isArray(booking?.roomNames) && booking.roomNames.length) {
+    return booking.roomNames.join(", ");
+  }
+
+  return booking?.roomName || "-";
+}
+
+function formatBookingRoomNumbers(booking) {
+  if (Array.isArray(booking?.roomNumbers) && booking.roomNumbers.length) {
+    return booking.roomNumbers.filter(Boolean).join(", ") || "-";
+  }
+
+  return "-";
 }
 
 function formatRatePeriodsSummary(ratePeriods) {
