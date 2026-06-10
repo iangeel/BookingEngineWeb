@@ -4,13 +4,14 @@ import {
   createAdminRoom,
   deleteAdminBooking,
   deleteAdminRoom,
+  getAdminAvailableRooms,
   getAdminBooking,
   getAdminBookings,
   getAdminRooms,
   isAdminUnauthorizedError,
   updateAdminBooking,
   updateAdminRoom
-} from "./api.js?v=20260603a";
+} from "./api.js?v=20260610c";
 import { THEME_BRAND } from "./themes/pursisimpluvama_theme.js?v=20260531a";
 
 const LANGUAGE_KEY = "booking-engine-language";
@@ -62,9 +63,13 @@ const TRANSLATIONS = {
     buttonDiscard: "Renunta",
     buttonEdit: "Editeaza",
     buttonDelete: "Sterge",
+    buttonNext: "Urmatorul",
+    buttonChangeDates: "Modifica perioada",
     buttonLoading: "Se incarca...",
+    buttonCheckingAvailability: "Se cauta...",
     bookingsEyebrow: "Rezervari",
     bookingsTitle: "Administrare rezervari",
+    bookingShowAllLabel: "Afiseaza toate rezervarile",
     bookingSearchLabel: "Cauta rezervare",
     bookingSearchPlaceholder: "Cauta dupa nume, email sau token",
     roomsEyebrow: "Camere",
@@ -101,6 +106,7 @@ const TRANSLATIONS = {
     roomTableDiscount: "Discount",
     roomTableUpdated: "Actualizat",
     bookingTableNumber: "Nr.",
+    bookingTableReference: "Nr. rezervare",
     bookingTableRoom: "Tip camera",
     bookingTableStay: "Perioada",
     bookingTableGuests: "Oaspeti",
@@ -112,9 +118,12 @@ const TRANSLATIONS = {
     tableActions: "Actiuni",
     bookingsEmpty: "Nu exista rezervari in acest moment.",
     bookingsEmptyFiltered: "Nu exista rezervari care sa corespunda cautarii.",
+    bookingsEmptyUpcoming: "Nu exista rezervari active sau viitoare.",
     roomsEmpty: "Nu exista camere in acest moment.",
     noRoomOptions: "Nu exista camere disponibile pentru selectie.",
-    roomSelectionHint: "Selecteaza cel putin o camera pentru rezervare.",
+    noAvailableRoomOptionsForDates: "Nu exista camere disponibile pentru perioada selectata.",
+    roomSelectionHint: "Selecteaza cel putin o camera disponibila pentru rezervare.",
+    bookingDatesStepHint: "Selecteaza perioada pentru a afisa doar camerele disponibile.",
     fallbackClient: "Fara client",
     loginSuccess: "Autentificarea a reusit.",
     logoutSuccess: "Sesiunea administrativa a fost inchisa.",
@@ -122,6 +131,7 @@ const TRANSLATIONS = {
     loadFailed: "Nu am putut incarca datele administrative.",
     roomsLoadFailed: "Nu am putut incarca camerele.",
     bookingsLoadFailed: "Nu am putut incarca rezervarile.",
+    availabilityLoadFailed: "Nu am putut incarca camerele disponibile.",
     roomSaved: "Camera a fost salvata.",
     roomDeleted: "Camera a fost stearsa.",
     bookingSaved: "Rezervarea a fost salvata.",
@@ -131,6 +141,7 @@ const TRANSLATIONS = {
     validationRoomRequired: "Selecteaza cel putin o camera.",
     warningSelectAtLeastOneRoom: "Selecteaza cel putin o camera inainte sa salvezi rezervarea.",
     warningRoomAlreadyBooked: "Una sau mai multe camere selectate sunt deja rezervate pentru perioada aleasa.",
+    validationBookingDatesRequired: "Selecteaza data de inceput si data de sfarsit.",
     validationDateRange: "Data de final trebuie sa fie dupa data de inceput.",
     validationRatePeriodDateRange: "Perioada tarifara trebuie sa aiba data de final dupa sau egala cu data de inceput.",
     validationRoomFormInvalid: "Completeaza corect toate campurile obligatorii pentru camera."
@@ -173,9 +184,13 @@ const TRANSLATIONS = {
     buttonDiscard: "Discard",
     buttonEdit: "Edit",
     buttonDelete: "Delete",
+    buttonNext: "Next",
+    buttonChangeDates: "Change dates",
     buttonLoading: "Loading...",
+    buttonCheckingAvailability: "Checking...",
     bookingsEyebrow: "Bookings",
     bookingsTitle: "Booking management",
+    bookingShowAllLabel: "Show all bookings",
     bookingSearchLabel: "Search booking",
     bookingSearchPlaceholder: "Search by name, email, or token",
     roomsEyebrow: "Rooms",
@@ -212,6 +227,7 @@ const TRANSLATIONS = {
     roomTableDiscount: "Discount",
     roomTableUpdated: "Updated",
     bookingTableNumber: "No.",
+    bookingTableReference: "Book reference",
     bookingTableRoom: "Room type",
     bookingTableStay: "Stay",
     bookingTableGuests: "Guests",
@@ -223,9 +239,12 @@ const TRANSLATIONS = {
     tableActions: "Actions",
     bookingsEmpty: "There are no bookings right now.",
     bookingsEmptyFiltered: "There are no bookings matching this search.",
+    bookingsEmptyUpcoming: "There are no current or upcoming bookings.",
     roomsEmpty: "There are no rooms right now.",
     noRoomOptions: "There are no rooms available for selection.",
-    roomSelectionHint: "Select at least one room for the booking.",
+    noAvailableRoomOptionsForDates: "There are no available rooms for the selected period.",
+    roomSelectionHint: "Select at least one available room for the booking.",
+    bookingDatesStepHint: "Choose the stay dates to load only the available rooms.",
     fallbackClient: "No client",
     loginSuccess: "Authentication succeeded.",
     logoutSuccess: "The admin session has been closed.",
@@ -233,6 +252,7 @@ const TRANSLATIONS = {
     loadFailed: "We couldn't load admin data.",
     roomsLoadFailed: "We couldn't load rooms.",
     bookingsLoadFailed: "We couldn't load bookings.",
+    availabilityLoadFailed: "We couldn't load available rooms.",
     roomSaved: "The room was saved.",
     roomDeleted: "The room was deleted.",
     bookingSaved: "The booking was saved.",
@@ -242,6 +262,7 @@ const TRANSLATIONS = {
     validationRoomRequired: "Select at least one room.",
     warningSelectAtLeastOneRoom: "Select at least one room before saving the booking.",
     warningRoomAlreadyBooked: "One or more selected rooms are already booked for the chosen period.",
+    validationBookingDatesRequired: "Select both a start date and an end date.",
     validationDateRange: "End date must be after start date.",
     validationRatePeriodDateRange: "A rate period end date must be on or after the start date.",
     validationRoomFormInvalid: "Complete all required room fields correctly."
@@ -254,10 +275,15 @@ const state = {
   rooms: [],
   bookings: [],
   bookingSearchTerm: "",
+  showAllBookings: false,
   selectedBookingId: null,
   editingRoomId: null,
   roomDraft: null,
   editingBookingId: null,
+  bookingDraft: null,
+  bookingModalStep: "dates",
+  availableBookingRooms: [],
+  loadingAvailableBookingRooms: false,
   loadingRooms: false,
   loadingBookings: false
 };
@@ -525,6 +551,9 @@ function wirePanelActions() {
   if (createBookingButton) {
     createBookingButton.addEventListener("click", () => {
       state.editingBookingId = null;
+      state.bookingDraft = createBookingDraft();
+      state.bookingModalStep = "dates";
+      state.availableBookingRooms = [];
       renderBookingModal();
       openModal("booking");
     });
@@ -549,6 +578,9 @@ function wirePanelActions() {
 
       upsertBooking(response.data);
       state.editingBookingId = bookingId;
+      state.bookingDraft = createBookingDraft(response.data);
+      state.bookingModalStep = "dates";
+      state.availableBookingRooms = [];
       renderBookingModal();
       openModal("booking");
     });
@@ -583,6 +615,16 @@ function wirePanelActions() {
     searchInput.value = state.bookingSearchTerm;
     searchInput.addEventListener("input", () => {
       state.bookingSearchTerm = searchInput.value.trim();
+      renderBookingsTable();
+      renderSelectedBookingBar();
+    });
+  }
+
+  const showAllBookingsCheckbox = document.querySelector("[data-admin-show-all-bookings]");
+  if (showAllBookingsCheckbox) {
+    showAllBookingsCheckbox.checked = state.showAllBookings;
+    showAllBookingsCheckbox.addEventListener("change", () => {
+      state.showAllBookings = showAllBookingsCheckbox.checked;
       renderBookingsTable();
       renderSelectedBookingBar();
     });
@@ -689,14 +731,78 @@ function wireBookingModal() {
     return;
   }
 
+  const nextButton = document.querySelector("[data-admin-booking-next]");
+  const backButton = document.querySelector("[data-admin-booking-back]");
+
+  const syncBookingDraft = () => {
+    state.bookingDraft = collectBookingDraftFromForm(form, state.bookingDraft || createBookingDraft());
+  };
+
+  form.addEventListener("input", syncBookingDraft);
+  form.addEventListener("change", syncBookingDraft);
+
+  if (nextButton) {
+    nextButton.addEventListener("click", async () => {
+      const draft = collectBookingDraftFromForm(form, state.bookingDraft || createBookingDraft());
+
+      if (!draft.startDate || !draft.endDate) {
+        setFeedback(t("validationBookingDatesRequired"), "error");
+        return;
+      }
+
+      if (draft.endDate < draft.startDate) {
+        setFeedback(t("validationDateRange"), "error");
+        return;
+      }
+
+      state.bookingDraft = draft;
+      state.loadingAvailableBookingRooms = true;
+      renderBookingModal();
+
+      try {
+        const response = await runProtected(
+          () => getAdminAvailableRooms(state.auth.accessToken, {
+            startDate: draft.startDate,
+            endDate: draft.endDate,
+            excludeBookingId: state.editingBookingId
+          }),
+          t("availabilityLoadFailed")
+        );
+
+        if (!response) {
+          return;
+        }
+
+        state.availableBookingRooms = sortRooms(response.data || []);
+        const availableRoomIds = new Set(state.availableBookingRooms.map((room) => String(room.id)));
+        state.bookingDraft.roomIds = (draft.roomIds || [])
+          .map((roomId) => Number(roomId))
+          .filter(Number.isFinite)
+          .filter((roomId) => availableRoomIds.has(String(roomId)));
+        state.bookingModalStep = "details";
+        renderBookingModal();
+      } finally {
+        state.loadingAvailableBookingRooms = false;
+        renderBookingModal();
+      }
+    });
+  }
+
+  if (backButton) {
+    backButton.addEventListener("click", () => {
+      state.bookingDraft = collectBookingDraftFromForm(form, state.bookingDraft || createBookingDraft());
+      state.bookingModalStep = "dates";
+      renderBookingModal();
+    });
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitButton = form.querySelector("[data-admin-booking-submit]");
     const originalLabel = submitButton?.textContent;
-    const bookingId = form.elements.bookingId.value || null;
-    const selectedRoomIds = Array.from(form.querySelectorAll('input[name="roomIds"]:checked'))
-      .map((input) => Number(input.value))
-      .filter(Number.isFinite);
+    const draft = collectBookingDraftFromForm(form, state.bookingDraft || createBookingDraft());
+    const bookingId = draft.bookingId || null;
+    const selectedRoomIds = draft.roomIds || [];
 
     if (!selectedRoomIds.length) {
       const warningMessage = t("warningSelectAtLeastOneRoom");
@@ -705,24 +811,29 @@ function wireBookingModal() {
       return;
     }
 
-    if (form.elements.endDate.value && form.elements.startDate.value && form.elements.endDate.value < form.elements.startDate.value) {
+    if (!draft.startDate || !draft.endDate) {
+      setFeedback(t("validationBookingDatesRequired"), "error");
+      return;
+    }
+
+    if (draft.endDate < draft.startDate) {
       setFeedback(t("validationDateRange"), "error");
       return;
     }
 
     const payload = {
       roomIds: selectedRoomIds,
-      guestCount: form.elements.guestCount.value,
-      startDate: form.elements.startDate.value,
-      endDate: form.elements.endDate.value,
-      status: form.elements.status.value,
-      clientFirstName: form.elements.clientFirstName.value,
-      clientLastName: form.elements.clientLastName.value,
-      clientEmail: form.elements.clientEmail.value,
-      clientPhoneNumber: form.elements.clientPhoneNumber.value,
-      mentions: form.elements.mentions.value,
-      lockedUntil: form.elements.lockedUntil.value,
-      token: form.elements.token.value.trim()
+      guestCount: draft.guestCount,
+      startDate: draft.startDate,
+      endDate: draft.endDate,
+      status: draft.status,
+      clientFirstName: draft.clientFirstName,
+      clientLastName: draft.clientLastName,
+      clientEmail: draft.clientEmail,
+      clientPhoneNumber: draft.clientPhoneNumber,
+      mentions: draft.mentions,
+      lockedUntil: draft.lockedUntil,
+      token: draft.token
     };
 
     try {
@@ -736,6 +847,7 @@ function wireBookingModal() {
         : await createAdminBooking(state.auth.accessToken, payload);
 
       setFeedback(t("bookingSaved"), "success");
+      state.bookingDraft = null;
       state.editingBookingId = null;
       await refreshBookings();
       closeBookingModal();
@@ -873,6 +985,9 @@ function renderBookingsTable() {
   }
 
   const visibleBookings = getFilteredBookings();
+  if (state.selectedBookingId && !visibleBookings.some((booking) => booking.id === state.selectedBookingId)) {
+    state.selectedBookingId = null;
+  }
 
   if (state.loadingBookings) {
     container.innerHTML = `<div class="empty-state"><p>${t("buttonLoading")}</p></div>`;
@@ -885,7 +1000,10 @@ function renderBookingsTable() {
   }
 
   if (!visibleBookings.length) {
-    container.innerHTML = `<div class="empty-state"><p>${t("bookingsEmptyFiltered")}</p></div>`;
+    const emptyKey = state.bookingSearchTerm.trim() || state.showAllBookings
+      ? "bookingsEmptyFiltered"
+      : "bookingsEmptyUpcoming";
+    container.innerHTML = `<div class="empty-state"><p>${t(emptyKey)}</p></div>`;
     return;
   }
 
@@ -894,6 +1012,7 @@ function renderBookingsTable() {
       <thead>
         <tr>
           <th>${t("bookingTableNumber")}</th>
+          <th>${t("bookingTableReference")}</th>
           <th>${t("bookingTableRoom")}</th>
           <th>${t("bookingTableStay")}</th>
           <th>${t("bookingTableGuests")}</th>
@@ -908,10 +1027,11 @@ function renderBookingsTable() {
         ${visibleBookings.map((booking) => `
           <tr class="admin-booking-row${booking.id === state.selectedBookingId ? " is-selected" : ""}" data-booking-row="${booking.id}">
             <td>${escapeHtml(formatBookingRoomNumbers(booking))}</td>
+            <td>${escapeHtml(formatBookingReference(booking.id))}</td>
             <td>${escapeHtml(formatBookingRoomTypes(booking))}</td>
             <td>${escapeHtml(formatStayRange(booking.startDate, booking.endDate))}</td>
             <td>${booking.guestCount ?? "-"}</td>
-            <td><span class="status-pill">${escapeHtml(booking.status || "-")}</span></td>
+            <td><span class="status-pill ${escapeHtml(getBookingStatusClassName(booking.status))}">${escapeHtml(booking.status || "-")}</span></td>
             <td>${escapeHtml(formatClientName(booking))}</td>
             <td>${booking.clientPhoneNumber ? escapeHtml(booking.clientPhoneNumber) : "-"}</td>
             <td>${booking.mentions ? escapeHtml(booking.mentions) : "-"}</td>
@@ -957,13 +1077,18 @@ function renderSelectedBookingBar() {
 }
 
 function getFilteredBookings() {
+  const today = getTodayDateString();
+  const baseBookings = state.showAllBookings
+    ? state.bookings
+    : state.bookings.filter((booking) => booking?.endDate && booking.endDate >= today);
   const query = state.bookingSearchTerm.trim().toLowerCase();
   if (!query) {
-    return state.bookings;
+    return baseBookings;
   }
 
-  return state.bookings.filter((booking) => {
+  return baseBookings.filter((booking) => {
     const haystack = [
+      formatBookingReference(booking.id),
       booking.clientFirstName,
       booking.clientLastName,
       booking.clientEmail,
@@ -976,6 +1101,35 @@ function getFilteredBookings() {
 
     return haystack.includes(query);
   });
+}
+
+function formatBookingReference(bookingId) {
+  if (!bookingId) {
+    return "-";
+  }
+
+  return String(bookingId).split("-")[0] || "-";
+}
+
+function getBookingStatusClassName(status) {
+  switch (String(status || "").toUpperCase()) {
+    case "CONFIRMED":
+      return "status-confirmed";
+    case "PENDING":
+      return "status-pending";
+    case "FAILED":
+      return "status-failed";
+    default:
+      return "status-muted";
+  }
+}
+
+function getTodayDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function renderRoomModal() {
@@ -1091,20 +1245,32 @@ function renderBookingModal() {
   const title = document.querySelector("[data-admin-booking-modal-title]");
   const form = document.querySelector("[data-admin-booking-form]");
   const roomOptions = document.querySelector("[data-admin-room-options]");
+  const roomSection = document.querySelector("[data-admin-booking-room-section]");
+  const stepHint = document.querySelector("[data-admin-booking-step-hint]");
+  const nextButton = document.querySelector("[data-admin-booking-next]");
+  const backButton = document.querySelector("[data-admin-booking-back]");
+  const submitButton = document.querySelector("[data-admin-booking-submit]");
+  const detailFields = document.querySelectorAll("[data-admin-booking-details-field]");
+  const dateFields = document.querySelectorAll("[data-admin-booking-dates-field]");
 
-  if (!title || !form || !roomOptions) {
+  if (!title || !form || !roomOptions || !roomSection || !stepHint || !nextButton || !backButton || !submitButton) {
     return;
   }
 
   const booking = state.bookings.find((item) => item.id === state.editingBookingId);
+  const draft = state.bookingDraft || createBookingDraft(booking);
+  state.bookingDraft = draft;
+  const isDetailsStep = state.bookingModalStep === "details";
 
   title.textContent = booking ? t("bookingEditorEdit") : t("bookingEditorCreate");
 
-  roomOptions.innerHTML = state.rooms.length
+  roomOptions.innerHTML = state.loadingAvailableBookingRooms
+    ? `<div class="empty-state"><p>${t("buttonCheckingAvailability")}</p></div>`
+    : state.availableBookingRooms.length
     ? `
       <p class="note">${t("roomSelectionHint")}</p>
       <div class="admin-room-options-grid">
-        ${state.rooms.map((room) => `
+        ${state.availableBookingRooms.map((room) => `
           <label class="admin-room-option">
             <input type="checkbox" name="roomIds" value="${room.id}">
             <span>${escapeHtml(formatRoomLabel(room))} · ${formatCurrency(room.ratePerNight)}</span>
@@ -1112,25 +1278,70 @@ function renderBookingModal() {
         `).join("")}
       </div>
     `
-    : `<div class="empty-state"><p>${t("noRoomOptions")}</p></div>`;
+    : `<div class="empty-state"><p>${t("noAvailableRoomOptionsForDates")}</p></div>`;
 
-  form.elements.bookingId.value = booking?.id || "";
-  form.elements.guestCount.value = booking?.guestCount ?? "";
-  form.elements.startDate.value = booking?.startDate || "";
-  form.elements.endDate.value = booking?.endDate || "";
-  form.elements.status.value = booking?.status || "CONFIRMED";
-  form.elements.clientFirstName.value = booking?.clientFirstName || "";
-  form.elements.clientLastName.value = booking?.clientLastName || "";
-  form.elements.clientEmail.value = booking?.clientEmail || "";
-  form.elements.clientPhoneNumber.value = booking?.clientPhoneNumber || "";
-  form.elements.mentions.value = booking?.mentions || "";
-  form.elements.lockedUntil.value = toDateTimeLocalValue(booking?.lockedUntil);
-  form.elements.token.value = booking?.token || "";
+  form.elements.bookingId.value = draft.bookingId || "";
+  form.elements.guestCount.value = draft.guestCount ?? "";
+  form.elements.startDate.value = draft.startDate || "";
+  form.elements.endDate.value = draft.endDate || "";
+  form.elements.status.value = draft.status || "CONFIRMED";
+  form.elements.clientFirstName.value = draft.clientFirstName || "";
+  form.elements.clientLastName.value = draft.clientLastName || "";
+  form.elements.clientEmail.value = draft.clientEmail || "";
+  form.elements.clientPhoneNumber.value = draft.clientPhoneNumber || "";
+  form.elements.mentions.value = draft.mentions || "";
+  form.elements.lockedUntil.value = toDateTimeLocalValue(draft.lockedUntil);
+  form.elements.token.value = draft.token || "";
 
-  const selectedRoomIds = new Set((booking?.roomIds || []).map(String));
+  stepHint.textContent = isDetailsStep ? t("roomSelectionHint") : t("bookingDatesStepHint");
+  setElementVisibility(stepHint, true);
+  setElementVisibility(roomSection, isDetailsStep);
+  detailFields.forEach((field) => {
+    setElementVisibility(field, isDetailsStep);
+  });
+  dateFields.forEach((field) => {
+    setElementVisibility(field, true);
+  });
+  form.elements.startDate.disabled = isDetailsStep;
+  form.elements.endDate.disabled = isDetailsStep;
+  setElementVisibility(nextButton, !isDetailsStep);
+  nextButton.disabled = state.loadingAvailableBookingRooms;
+  nextButton.textContent = state.loadingAvailableBookingRooms ? t("buttonCheckingAvailability") : t("buttonNext");
+  setElementVisibility(backButton, isDetailsStep);
+  setElementVisibility(submitButton, isDetailsStep);
+  submitButton.disabled = state.loadingAvailableBookingRooms || !state.availableBookingRooms.length;
+
+  const selectedRoomIds = new Set((draft.roomIds || []).map(String));
   roomOptions.querySelectorAll('input[name="roomIds"]').forEach((input) => {
     input.checked = selectedRoomIds.has(input.value);
   });
+}
+
+function setElementVisibility(element, isVisible) {
+  if (!element) {
+    return;
+  }
+
+  element.hidden = !isVisible;
+  element.style.display = isVisible ? "" : "none";
+}
+
+function createBookingDraft(booking = {}) {
+  return {
+    bookingId: booking?.id || "",
+    roomIds: Array.isArray(booking?.roomIds) ? [...booking.roomIds] : [],
+    guestCount: booking?.guestCount ?? "",
+    startDate: booking?.startDate || "",
+    endDate: booking?.endDate || "",
+    status: booking?.status || "CONFIRMED",
+    clientFirstName: booking?.clientFirstName || "",
+    clientLastName: booking?.clientLastName || "",
+    clientEmail: booking?.clientEmail || "",
+    clientPhoneNumber: booking?.clientPhoneNumber || "",
+    mentions: booking?.mentions || "",
+    lockedUntil: booking?.lockedUntil || "",
+    token: booking?.token || ""
+  };
 }
 
 function createRoomDraft(room = {}) {
@@ -1172,6 +1383,34 @@ function collectRoomDraftFromForm(form) {
       endDate: row.querySelector('[name="ratePeriodEndDate"]')?.value || "",
       ratePerNight: row.querySelector('[name="ratePeriodRatePerNight"]')?.value || ""
     }))
+  };
+}
+
+function collectBookingDraftFromForm(form, baseDraft = createBookingDraft()) {
+  const roomInputs = Array.from(form.querySelectorAll('input[name="roomIds"]'));
+  const roomIds = state.bookingModalStep === "details" && roomInputs.length
+    ? roomInputs
+      .filter((input) => input.checked)
+      .map((input) => Number(input.value))
+      .filter(Number.isFinite)
+    : Array.isArray(baseDraft.roomIds)
+      ? [...baseDraft.roomIds]
+      : [];
+
+  return {
+    bookingId: form.elements.bookingId.value || baseDraft.bookingId || "",
+    roomIds,
+    guestCount: form.elements.guestCount.value,
+    startDate: form.elements.startDate.value,
+    endDate: form.elements.endDate.value,
+    status: form.elements.status.value,
+    clientFirstName: form.elements.clientFirstName.value,
+    clientLastName: form.elements.clientLastName.value,
+    clientEmail: form.elements.clientEmail.value,
+    clientPhoneNumber: form.elements.clientPhoneNumber.value,
+    mentions: form.elements.mentions.value,
+    lockedUntil: form.elements.lockedUntil.value,
+    token: form.elements.token.value.trim()
   };
 }
 
@@ -1221,6 +1460,10 @@ function closeRoomModal() {
 
 function closeBookingModal() {
   state.editingBookingId = null;
+  state.bookingDraft = null;
+  state.bookingModalStep = "dates";
+  state.availableBookingRooms = [];
+  state.loadingAvailableBookingRooms = false;
   const modal = document.querySelector("[data-admin-booking-modal]");
   if (modal) {
     modal.hidden = true;

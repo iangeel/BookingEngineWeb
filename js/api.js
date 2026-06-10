@@ -230,6 +230,22 @@ export async function getAdminRooms(token) {
   };
 }
 
+export async function getAdminAvailableRooms(token, params = {}) {
+  const search = new URLSearchParams({
+    startDate: params.startDate,
+    endDate: params.endDate
+  });
+  if (params.excludeBookingId) {
+    search.set("excludeBookingId", params.excludeBookingId);
+  }
+
+  const data = await adminRequest(`/admin/rooms/availability?${search.toString()}`, token);
+  return {
+    endpoint: `${API_BASE_URL}/admin/rooms/availability?${search.toString()}`,
+    data
+  };
+}
+
 export async function createAdminRoom(token, payload) {
   const data = await adminRequest("/admin/rooms", token, {
     method: "POST",

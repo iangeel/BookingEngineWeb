@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=20260610f">
   <link rel="stylesheet" href="css/themes/pursisimpluvama_theme.css">
   <link rel="stylesheet" href="css/responsive.css">
 </head>
@@ -62,6 +62,10 @@
               <h2 data-admin-i18n="bookingsTitle">Administrare rezervari</h2>
             </div>
             <div class="admin-bookings-tools">
+              <label class="admin-bookings-filter">
+                <input type="checkbox" data-admin-show-all-bookings>
+                <span data-admin-i18n="bookingShowAllLabel">Afiseaza toate rezervarile</span>
+              </label>
               <label class="admin-bookings-search">
                 <span data-admin-i18n="bookingSearchLabel">Cauta rezervare</span>
                 <input
@@ -152,15 +156,16 @@
         <div class="admin-modal-body">
           <form class="admin-form-grid" data-admin-booking-form>
             <input type="hidden" name="bookingId">
-            <div class="admin-field-full">
+            <p class="note admin-field-full" data-admin-booking-step-hint></p>
+            <div class="admin-field-full" data-admin-booking-room-section>
               <span class="admin-field-label" data-admin-i18n="labelIncludedRooms">Camere incluse</span>
               <div class="admin-room-options" data-admin-room-options></div>
             </div>
-            <label>
+            <label data-admin-booking-details-field>
               <span data-admin-i18n="labelGuestCount">Numar oaspeti</span>
               <input name="guestCount" type="number" min="1">
             </label>
-            <label>
+            <label data-admin-booking-details-field>
               <span data-admin-i18n="labelStatus">Status</span>
               <select name="status">
                 <option value="" data-admin-i18n="statusAuto">Fara modificare</option>
@@ -172,43 +177,45 @@
                 <option value="CANCELLED">CANCELLED</option>
               </select>
             </label>
-            <label>
+            <label data-admin-booking-dates-field>
               <span data-admin-i18n="labelStartDate">Data inceput</span>
               <input name="startDate" type="date" required>
             </label>
-            <label>
+            <label data-admin-booking-dates-field>
               <span data-admin-i18n="labelEndDate">Data sfarsit</span>
               <input name="endDate" type="date" required>
             </label>
-            <label>
+            <label data-admin-booking-details-field>
               <span data-admin-i18n="labelClientFirstName">Prenume client</span>
               <input name="clientFirstName" type="text">
             </label>
-            <label>
+            <label data-admin-booking-details-field>
               <span data-admin-i18n="labelClientLastName">Nume client</span>
               <input name="clientLastName" type="text">
             </label>
-            <label class="admin-field-full">
+            <label class="admin-field-full" data-admin-booking-details-field>
               <span data-admin-i18n="labelClientEmail">Email client</span>
               <input name="clientEmail" type="email">
             </label>
-            <label class="admin-field-full">
+            <label class="admin-field-full" data-admin-booking-details-field>
               <span data-admin-i18n="labelClientPhone">Telefon client</span>
               <input name="clientPhoneNumber" type="tel">
             </label>
-            <label class="admin-field-full">
+            <label class="admin-field-full" data-admin-booking-details-field>
               <span data-admin-i18n="labelMentions">Mentiuni</span>
               <textarea name="mentions" rows="3"></textarea>
             </label>
-            <label>
+            <label data-admin-booking-details-field>
               <span data-admin-i18n="labelLockedUntil">Blocat pana la</span>
               <input name="lockedUntil" type="datetime-local">
             </label>
-            <label>
+            <label data-admin-booking-details-field>
               <span data-admin-i18n="labelToken">Token rezervare</span>
               <input name="token" type="text">
             </label>
             <div class="admin-inline-actions admin-field-full">
+              <button class="button button-secondary" type="button" data-admin-booking-back data-admin-i18n="buttonChangeDates">Modifica perioada</button>
+              <button class="button button-primary" type="button" data-admin-booking-next data-admin-i18n="buttonNext">Urmatorul</button>
               <button class="button button-primary" type="submit" data-admin-booking-submit data-admin-i18n="buttonSaveBooking">Salveaza rezervarea</button>
               <button class="button button-secondary" type="button" data-admin-cancel-booking-edit data-admin-i18n="buttonDiscard">Renunta</button>
             </div>
@@ -230,6 +237,6 @@
     </footer>
   </div>
 
-  <script type="module" src="js/admin.js?v=20260604b"></script>
+  <script type="module" src="js/admin.js?v=20260610e"></script>
 </body>
 </html>

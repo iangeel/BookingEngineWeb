@@ -9,7 +9,7 @@ export const THEME_SITE_CONTENT = {
     taxId: "45359420",
     tradeRegisterNumber: "J2021001230285",
     address: "Jud. Olt, Slatina, Str. Livezi 5",
-    phone: "+40 736 906 545",
+    phone: "+40 787 777 397",
     email: "pursisimpluvama@yahoo.com"
   },
   netopia: {
@@ -133,7 +133,7 @@ export const THEME_SITE_CONTENT = {
             "Conditii specifice: serviciul este prestat la unitatea de cazare in intervalul de check-in al rezervarii confirmate.",
             "Politica flexibila: nu se percepe taxa daca rezervarea este anulata cu cel putin 30 de zile inainte de sosire.",
             "Politica nerambursabila: in cazul anularii, modificarii sau neprezentarii, se incaseaza pretul total al rezervarii.",
-            "Procedura de anulare: solicitarile de anulare sau modificare se trimit prin email la pursisimpluvama@yahoo.com sau telefonic la +40 736 906 545."
+            "Procedura de anulare: solicitarile de anulare sau modificare se trimit prin email la pursisimpluvama@yahoo.com sau telefonic la +40 787 777 397."
           ]
         },
         {
@@ -163,7 +163,7 @@ export const THEME_SITE_CONTENT = {
             "Adresa sediului social: Jud. Olt, Slatina, Str. Livezi 5",
             "CUI: 45359420",
             "Nr. Registrul Comertului: J2021001230285",
-            "Telefon: +40 736 906 545",
+            "Telefon: +40 787 777 397",
             "Email: pursisimpluvama@yahoo.com"
           ]
         }
@@ -230,7 +230,7 @@ export const THEME_SITE_CONTENT = {
             "Specific conditions: the service is provided at the accommodation unit during the check-in window of the confirmed booking.",
             "Flexible policy: no fee is charged if the booking is cancelled at least 30 days before arrival.",
             "Non-refundable policy: if the booking is cancelled, modified, or the guest does not show up, the total booking price is charged.",
-            "Cancellation procedure: cancellation or change requests should be sent by email to pursisimpluvama@yahoo.com or by phone at +40 736 906 545."
+            "Cancellation procedure: cancellation or change requests should be sent by email to pursisimpluvama@yahoo.com or by phone at +40 787 777 397."
           ]
         },
         {
@@ -260,7 +260,7 @@ export const THEME_SITE_CONTENT = {
             "Registered office: Jud. Olt, Slatina, Str. Livezi 5",
             "Tax ID: 45359420",
             "Trade Register number: J2021001230285",
-            "Phone: +40 736 906 545",
+            "Phone: +40 787 777 397",
             "Email: pursisimpluvama@yahoo.com"
           ]
         }
