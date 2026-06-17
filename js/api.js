@@ -161,6 +161,7 @@ async function adminRequest(path, token, options = {}) {
 function normalizeAdminRoomPayload(payload) {
   return {
     name: payload.name?.trim() || "",
+    roomNumber: payload.roomNumber?.trim() || "",
     capacity: Number(payload.capacity),
     ratePerNight: Number(payload.ratePerNight),
     discount: payload.discount === "" || payload.discount == null ? 0 : Number(payload.discount),
@@ -179,8 +180,9 @@ function normalizeAdminBookingPayload(payload) {
     ? payload.roomIds.map((roomId) => Number(roomId)).filter(Number.isFinite)
     : [];
 
-  const roomId = Number(payload.roomId);
-  if (Number.isFinite(roomId) && !roomIds.includes(roomId)) {
+  const parsedRoomId = Number(payload.roomId);
+  const roomId = Number.isFinite(parsedRoomId) ? parsedRoomId : null;
+  if (roomId != null && !roomIds.includes(roomId)) {
     roomIds.unshift(roomId);
   }
 
@@ -195,6 +197,7 @@ function normalizeAdminBookingPayload(payload) {
     clientLastName: payload.clientLastName?.trim() || null,
     clientEmail: payload.clientEmail?.trim() || null,
     clientPhoneNumber: payload.clientPhoneNumber?.trim() || null,
+    mentions: payload.mentions?.trim() || null,
     lockedUntil: payload.lockedUntil || null,
     token: payload.token || null
   };
@@ -223,6 +226,22 @@ export async function getAdminRooms(token) {
   const data = await adminRequest("/admin/rooms", token);
   return {
     endpoint: `${API_BASE_URL}/admin/rooms`,
+    data
+  };
+}
+
+export async function getAdminAvailableRooms(token, params = {}) {
+  const search = new URLSearchParams({
+    startDate: params.startDate,
+    endDate: params.endDate
+  });
+  if (params.excludeBookingId) {
+    search.set("excludeBookingId", params.excludeBookingId);
+  }
+
+  const data = await adminRequest(`/admin/rooms/availability?${search.toString()}`, token);
+  return {
+    endpoint: `${API_BASE_URL}/admin/rooms/availability?${search.toString()}`,
     data
   };
 }

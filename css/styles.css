@@ -800,6 +800,7 @@ select:focus {
 .admin-toolbar,
 .admin-summary,
 .admin-toolbar-actions,
+.admin-bookings-tools,
 .admin-tabs,
 .admin-split,
 .admin-panel-heading,
@@ -825,6 +826,42 @@ select:focus {
 .admin-toolbar,
 .admin-panel-heading {
   align-items: center;
+}
+
+.admin-bookings-tools {
+  justify-items: stretch;
+}
+
+.admin-bookings-search {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-bookings-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.admin-bookings-filter input {
+  inline-size: 1rem;
+  block-size: 1rem;
+  margin: 0;
+}
+
+.admin-bookings-search span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.admin-bookings-search input {
+  min-width: min(100%, 22rem);
 }
 
 .admin-summary,
@@ -1136,15 +1173,27 @@ select:focus {
 }
 
 .status-pill.status-confirmed {
-  color: var(--success);
+  color: #059669;
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.24);
 }
 
 .status-pill.status-pending {
-  color: var(--warning);
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.24);
 }
 
 .status-pill.status-failed {
-  color: var(--danger);
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.24);
+}
+
+.status-pill.status-muted {
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.08);
+  border-color: rgba(107, 114, 128, 0.24);
 }
 
 .empty-state {
