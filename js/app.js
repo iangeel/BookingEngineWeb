@@ -4,8 +4,8 @@ import {
   getBookingStatus,
   initiatePayment,
   updateClientData
-} from "./api.js?v=20260527b";
-import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260527b";
+} from "./api.js?v=20260618c";
+import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260618c";
 
 const STORAGE_KEY = "aurelia-booking-flow";
 const LANGUAGE_KEY = "booking-engine-language";
@@ -17,6 +17,17 @@ const FIXED_COUNTRY_NAME = "Romania";
 const COMPLIANCE_MODAL_ID = "site-compliance-modal";
 const ROOM_GALLERY_MODAL_ID = "room-gallery-modal";
 const DEFAULT_ROOM_COVER = "assets/normal-property-view.png";
+const BOOKING_FLOW = THEME_SITE_CONTENT.bookingFlow || {};
+const AVAILABILITY_SEARCH_MODE = BOOKING_FLOW.availabilitySearchMode === "guests" ? "guests" : "rooms";
+const DEFAULT_SEARCH_COUNT = Math.max(1, Number(
+  AVAILABILITY_SEARCH_MODE === "rooms" ? BOOKING_FLOW.defaultRoomCount : BOOKING_FLOW.defaultGuestCount
+) || 1);
+const MIN_SEARCH_COUNT = Math.max(1, Number(
+  AVAILABILITY_SEARCH_MODE === "rooms" ? BOOKING_FLOW.minRoomCount : BOOKING_FLOW.minGuestCount
+) || 1);
+const MAX_SEARCH_COUNT = Math.max(MIN_SEARCH_COUNT, Number(
+  AVAILABILITY_SEARCH_MODE === "rooms" ? BOOKING_FLOW.maxRoomCount : BOOKING_FLOW.maxGuestCount
+) || 12);
 const LOCALES = {
   ro: "ro-RO",
   en: "en-US"
@@ -91,7 +102,11 @@ const TRANSLATIONS = {
     homeSearchTitle: "Verifica disponibilitatea si continua catre selectia camerei",
     labelCheckin: "Check-in",
     labelCheckout: "Check-out",
+    labelSearchRooms: "Camere",
+    searchRoomsInfoTooltip: "Numarul maxim de oaspeti per camera este 2.",
     labelGuests: "Persoane",
+    searchCounterDecrease: "Reduce numarul de camere",
+    searchCounterIncrease: "Creste numarul de camere",
     guestCounterDecrease: "Reduce numarul de persoane",
     guestCounterIncrease: "Creste numarul de persoane",
     labelFirstName: "Prenume",
@@ -183,6 +198,8 @@ const TRANSLATIONS = {
     roomCapacityLabel: "Capacitate",
     roomsIncludedLabel: "Camere incluse",
     roomCountLabel: "Numar camere",
+    roomRequestSingular: "camera",
+    roomRequestPlural: "camere",
     roomAvailabilityLabel: "Disponibila pentru perioada selectata",
     roomAvailabilityMissingLabel: "Disponibilitate primita din backend",
     priceUnavailable: "Tarif disponibil in pasul urmator",
@@ -208,7 +225,11 @@ const TRANSLATIONS = {
     homeSearchTitle: "Check availability and continue to room selection",
     labelCheckin: "Check-in",
     labelCheckout: "Check-out",
+    labelSearchRooms: "Rooms",
+    searchRoomsInfoTooltip: "The maximum number of guests per room is 2.",
     labelGuests: "People",
+    searchCounterDecrease: "Decrease room count",
+    searchCounterIncrease: "Increase room count",
     guestCounterDecrease: "Decrease people count",
     guestCounterIncrease: "Increase people count",
     labelFirstName: "First name",
@@ -300,6 +321,8 @@ const TRANSLATIONS = {
     roomCapacityLabel: "Capacity",
     roomsIncludedLabel: "Included rooms",
     roomCountLabel: "Room count",
+    roomRequestSingular: "room",
+    roomRequestPlural: "rooms",
     roomAvailabilityLabel: "Available for the selected stay",
     roomAvailabilityMissingLabel: "Availability received from backend",
     priceUnavailable: "Rate available in the next step",
@@ -319,7 +342,7 @@ const defaultState = {
   stay: {
     checkin: "",
     checkout: "",
-    guests: 2
+    rooms: DEFAULT_SEARCH_COUNT
   },
   room: null,
   booking: null,
@@ -645,10 +668,7 @@ function describeRoom(room) {
   const roomCount = Number(room.roomCount || roomNames.length || 1);
 
   if (roomCount > 1) {
-    const labels = roomNames
-      .map((name) => normalizeRoomName(name))
-      .filter(Boolean)
-      .join(currentLanguage === "ro" ? ", " : ", ");
+    const labels = formatGroupedRoomNames(roomNames);
 
     return currentLanguage === "ro"
       ? `Pachet de ${roomCount} camere pentru grupuri, compus din: ${labels}.`
@@ -841,8 +861,13 @@ function applyDateDefaults() {
   const now = new Date();
   const checkin = state.stay.checkin || formatDate(addDays(now, 39));
   const checkout = state.stay.checkout || formatDate(addDays(now, 42));
+  const searchFieldName = getSearchFieldName();
+  const searchCount = Number(state.stay?.[searchFieldName]);
   state.stay.checkin = checkin;
   state.stay.checkout = checkout;
+  state.stay[searchFieldName] = Number.isFinite(searchCount) && searchCount >= MIN_SEARCH_COUNT
+    ? Math.min(searchCount, MAX_SEARCH_COUNT)
+    : DEFAULT_SEARCH_COUNT;
   saveState();
 }
 
@@ -865,6 +890,14 @@ function applyLanguage() {
 
   document.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
     node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
+  });
+
+  document.querySelectorAll("[data-i18n-title]").forEach((node) => {
+    node.setAttribute("title", t(node.dataset.i18nTitle));
+  });
+
+  document.querySelectorAll("[data-i18n-tooltip]").forEach((node) => {
+    node.setAttribute("data-tooltip", t(node.dataset.i18nTooltip));
   });
 
   const metaDescription = document.querySelector("[data-i18n-meta-description]");
@@ -944,13 +977,13 @@ function hydrateSearchForms() {
   document.querySelectorAll("[data-search-form]").forEach((form) => {
     form.elements.checkin.value = state.stay.checkin;
     form.elements.checkout.value = state.stay.checkout;
-    setGuestStepperValue(form, state.stay.guests || 2);
+    setGuestStepperValue(form, getStaySearchCount(state.stay));
   });
 
   document.querySelectorAll("[data-stay-summary]").forEach((node) => {
     node.innerHTML = `
       <strong>${t("staySummaryTitle")}</strong>
-      <span>${formatStayRange(state.stay.checkin, state.stay.checkout)} · ${formatGuestsCount(state.stay.guests)}</span>
+      <span>${formatStayRange(state.stay.checkin, state.stay.checkout)} · ${formatSearchCount(getStaySearchCount(state.stay))}</span>
     `;
   });
 }
@@ -961,7 +994,7 @@ function wireGuestSteppers() {
 
     stepper.querySelectorAll("[data-guest-step]").forEach((button) => {
       button.addEventListener("click", () => {
-        const current = Number(form.elements.guests.value || 2);
+        const current = getSearchFormCountValue(form);
         const next = button.dataset.guestStep === "increase" ? current + 1 : current - 1;
         setGuestStepperValue(form, next);
       });
@@ -970,10 +1003,14 @@ function wireGuestSteppers() {
 }
 
 function setGuestStepperValue(form, value) {
-  const safeValue = Math.max(1, Math.min(12, Number(value) || 2));
-  const guestsInput = form.elements.guests;
+  const safeValue = Math.max(MIN_SEARCH_COUNT, Math.min(MAX_SEARCH_COUNT, Number(value) || DEFAULT_SEARCH_COUNT));
+  const guestsInput = getSearchFormCountInput(form);
   const display = form.querySelector("[data-guest-count-display]");
   const decreaseButton = form.querySelector('[data-guest-step="decrease"]');
+
+  if (!guestsInput) {
+    return;
+  }
 
   guestsInput.value = String(safeValue);
 
@@ -982,7 +1019,7 @@ function setGuestStepperValue(form, value) {
   }
 
   if (decreaseButton) {
-    decreaseButton.disabled = safeValue <= 1;
+    decreaseButton.disabled = safeValue <= MIN_SEARCH_COUNT;
   }
 }
 
@@ -995,7 +1032,7 @@ function wireSearchForms() {
       state.stay = {
         checkin: form.elements.checkin.value,
         checkout: form.elements.checkout.value,
-        guests: Number(form.elements.guests.value)
+        [getSearchFieldName()]: getSearchFormCountValue(form)
       };
       state.room = null;
       state.booking = null;
@@ -1054,9 +1091,7 @@ async function renderRoomsPage() {
       ? rooms.map((room) => roomCardTemplate(room)).join("")
       : `
         <article class="surface-card empty-state">
-          <p class="eyebrow">${t("noMatchEyebrow")}</p>
-          <h2>${t("noMatchTitle")}</h2>
-          <p class="note">${t("noMatchNote")}</p>
+          <h2>${t("noMatchEyebrow")}</h2>
         </article>
       `;
 
@@ -1095,13 +1130,18 @@ async function renderRoomsPage() {
             galleryImages: media?.galleryImages
           };
           state.payment = null;
-          const bookingResponse = await createBooking({
+          const bookingPayload = {
             roomId: room.id,
             roomIds: room.roomIds,
-            guestCount: state.stay.guests,
             startDate: state.stay.checkin,
             endDate: state.stay.checkout
-          });
+          };
+
+          if (AVAILABILITY_SEARCH_MODE === "guests") {
+            bookingPayload.guestCount = getStaySearchCount(state.stay);
+          }
+
+          const bookingResponse = await createBooking(bookingPayload);
 
           state.room = {
             ...room,
@@ -1159,12 +1199,12 @@ function renderBookingPage() {
       <h2>${room.name}</h2>
       ${room.description ? `<p class="room-description">${room.description}</p>` : ""}
       <p>${t("roomCapacityLabel")}: ${formatGuestsCount(room.capacity)}</p>
-      ${room.roomCount > 1 ? `<p>${t("roomsIncludedLabel")}: ${room.roomNames.join(", ")}</p>` : ""}
+      ${room.roomCount > 1 ? `<p>${t("roomsIncludedLabel")}: ${formatGroupedRoomNames(room.roomNames)}</p>` : ""}
     </div>
     <div class="summary-list">
       <span>${formatStayRange(state.stay.checkin, state.stay.checkout)}</span>
       <span>${formatNights(nights)}</span>
-      <span>${formatGuestsCount(state.booking.guestCount ?? state.stay.guests)}</span>
+      <span>${formatSearchCount(getSelectedRoomCount(room, state.booking, state.stay))}</span>
     </div>
     <div class="summary-total">
       <span>${t("totalStayEstimate")}</span>
@@ -1198,7 +1238,7 @@ function renderBookingPage() {
   form.elements.addressDetails.value = initialGuest.addressDetails || "";
   phoneInput.value = initialPhoneValue || withPhonePrefix(getPhoneCountry(initialCountry).dial);
 
-  guestsDisplay.textContent = formatGuestsCount(state.booking.guestCount ?? state.stay.guests ?? 2);
+  guestsDisplay.textContent = formatSearchCount(getSelectedRoomCount(room, state.booking, state.stay));
 
   countrySelect.onchange = () => {
     const nextCountry = getPhoneCountry(countrySelect.value);
@@ -1256,12 +1296,10 @@ function renderBookingPage() {
       countryName: FIXED_COUNTRY_NAME,
       state: form.elements.state.value.trim(),
       postalCode: form.elements.postalCode.value.trim(),
-      addressDetails: form.elements.addressDetails.value.trim(),
-      guests: Number(state.booking.guestCount ?? state.stay.guests ?? 2)
+      addressDetails: form.elements.addressDetails.value.trim()
     };
 
     state.guest = guest;
-    state.stay.guests = guest.guests;
     saveState();
 
     try {
@@ -1356,8 +1394,7 @@ function persistGuestDraft(form) {
     countryName: FIXED_COUNTRY_NAME,
     state: form.elements.state.value.trim(),
     postalCode: form.elements.postalCode.value.trim(),
-    addressDetails: form.elements.addressDetails.value.trim(),
-    guests: Number(state.booking?.guestCount ?? state.stay.guests ?? 2)
+    addressDetails: form.elements.addressDetails.value.trim()
   };
   saveState();
 }
@@ -1391,7 +1428,9 @@ async function renderConfirmationPage() {
     const stay = {
       checkin: bookingState.data.startDate || state.stay.checkin,
       checkout: bookingState.data.endDate || state.stay.checkout,
-      guests: Number(bookingState.data.guestCount ?? state.stay.guests ?? 2)
+      [getSearchFieldName()]: AVAILABILITY_SEARCH_MODE === "rooms"
+        ? getSelectedRoomCount(state.room, bookingState.data, state.stay)
+        : Number(bookingState.data.guestCount ?? getStaySearchCount(state.stay))
     };
     const nights = calculateNights(stay.checkin, stay.checkout);
     const room = buildRoomSummary(state.room, bookingState.data);
@@ -1461,12 +1500,12 @@ async function renderConfirmationPage() {
         <h2>${room.name}</h2>
         ${room.description ? `<p class="room-description">${room.description}</p>` : ""}
         <p>${t("roomCapacityLabel")}: ${formatGuestsCount(room.capacity)}</p>
-        ${room.roomCount > 1 ? `<p>${t("roomsIncludedLabel")}: ${room.roomNames.join(", ")}</p>` : ""}
+        ${room.roomCount > 1 ? `<p>${t("roomsIncludedLabel")}: ${formatGroupedRoomNames(room.roomNames)}</p>` : ""}
       </div>
       <div class="summary-list">
         <span>${formatStayRange(stay.checkin, stay.checkout)}</span>
         <span>${formatNights(nights)}</span>
-        <span>${formatGuestsCount(stay.guests)}</span>
+        <span>${formatSearchCount(getStaySearchCount(stay))}</span>
         <span>${guest.firstName || t("guestFallback")} ${guest.lastName || ""}</span>
       </div>
       <div class="summary-total">
@@ -1489,6 +1528,8 @@ async function renderConfirmationPage() {
 function roomCardTemplate(room) {
   const description = describeRoom(room);
   const media = getRoomMedia(room);
+  const groupedRoomNames = formatGroupedRoomNames(room.roomNames);
+  const displayName = room.packageOption && groupedRoomNames ? groupedRoomNames : room.name;
 
   return `
     <article class="room-card">
@@ -1499,13 +1540,13 @@ function roomCardTemplate(room) {
       <div class="room-card-body">
         <div class="room-card-header">
           <p class="eyebrow">${room.packageOption ? t("packageRoom") : t("singleRoom")}</p>
-          <h2>${room.name}</h2>
+          <h2>${displayName}</h2>
           ${description ? `<p class="room-description">${description}</p>` : ""}
           <p>${t("roomCapacityLabel")}: ${formatGuestsCount(room.capacity)}</p>
         </div>
         <div class="amenity-tags">
           ${room.roomCount > 1 ? `<span>${t("roomCountLabel")}: ${room.roomCount}</span>` : ""}
-          ${room.roomCount > 1 ? `<span>${t("roomsIncludedLabel")}: ${room.roomNames.join(", ")}</span>` : ""}
+          ${room.roomCount > 1 ? `<span>${t("roomsIncludedLabel")}: ${groupedRoomNames}</span>` : ""}
           <span>${t("roomAvailabilityLabel")}</span>
         </div>
         <div class="price-row">
@@ -1530,12 +1571,13 @@ function buildRoomSummary(roomState, bookingState) {
         : roomState?.name
           ? [roomState.name]
           : [t("selectedRoom")];
+  const groupedRoomNames = formatGroupedRoomNames(roomNames);
   const media = getRoomMedia(roomState || bookingState || { name: roomNames.join(" + ") });
 
   const summary = {
     image: roomState?.image || media.coverImage,
-    name: bookingState?.roomName || roomState?.name || roomNames.join(" + "),
-    capacity: bookingState?.totalCapacity ?? bookingState?.roomCapacity ?? roomState?.totalCapacity ?? roomState?.capacity ?? state.stay.guests,
+    name: groupedRoomNames || bookingState?.roomName || roomState?.name || roomNames.join(" + "),
+    capacity: bookingState?.totalCapacity ?? bookingState?.roomCapacity ?? roomState?.totalCapacity ?? roomState?.capacity ?? 0,
     roomCount: bookingState?.roomCount ?? roomState?.roomCount ?? roomNames.length,
     roomNames,
     totalRateForStay: bookingState?.totalRateForStay ?? roomState?.totalRateForStay ?? null,
@@ -1546,6 +1588,22 @@ function buildRoomSummary(roomState, bookingState) {
     ...summary,
     description: describeRoom(summary)
   };
+}
+
+function formatGroupedRoomNames(roomNames) {
+  if (!Array.isArray(roomNames) || roomNames.length === 0) {
+    return "";
+  }
+
+  const groupedNames = new Map();
+
+  roomNames
+    .filter(Boolean)
+    .forEach((roomName) => groupedNames.set(roomName, (groupedNames.get(roomName) || 0) + 1));
+
+  return Array.from(groupedNames.entries())
+    .map(([roomName, count]) => `${count}x ${roomName}`)
+    .join(", ");
 }
 
 function guestFromBooking(booking) {
@@ -1563,8 +1621,7 @@ function guestFromBooking(booking) {
     countryName: booking.clientCountryName || FIXED_COUNTRY_NAME,
     state: booking.clientState || "",
     postalCode: booking.clientPostalCode || "",
-    addressDetails: booking.clientAddressDetails || "",
-    guests: Number(booking.guestCount ?? state.stay.guests ?? 2)
+    addressDetails: booking.clientAddressDetails || ""
   };
 }
 
@@ -1604,7 +1661,7 @@ async function getBookingStatusWithRetry(bookingId, token) {
 }
 
 function buildStayKey(stay) {
-  return [stay.checkin || "", stay.checkout || "", Number(stay.guests || 2)].join("|");
+  return [AVAILABILITY_SEARCH_MODE, stay.checkin || "", stay.checkout || "", getStaySearchCount(stay)].join("|");
 }
 
 function isCurrentAvailabilityCache(availability, stay) {
@@ -1656,6 +1713,32 @@ function formatNights(nights) {
 
 function formatGuestsCount(guests) {
   return `${guests} ${Number(guests) > 1 ? t("guestPlural") : t("guestSingular")}`;
+}
+
+function formatSearchCount(count) {
+  return `${count} ${Number(count) > 1 ? t("roomRequestPlural") : t("roomRequestSingular")}`;
+}
+
+function getSearchFieldName() {
+  return AVAILABILITY_SEARCH_MODE === "rooms" ? "rooms" : "guests";
+}
+
+function getSearchFormCountInput(form) {
+  return form?.elements?.[getSearchFieldName()] || form?.elements?.guests || form?.elements?.rooms || null;
+}
+
+function getSearchFormCountValue(form) {
+  const input = getSearchFormCountInput(form);
+  return Math.max(MIN_SEARCH_COUNT, Number(input?.value || DEFAULT_SEARCH_COUNT));
+}
+
+function getStaySearchCount(stay) {
+  const fieldName = getSearchFieldName();
+  return Math.max(MIN_SEARCH_COUNT, Number(stay?.[fieldName] ?? stay?.guests ?? stay?.rooms ?? DEFAULT_SEARCH_COUNT));
+}
+
+function getSelectedRoomCount(roomState, bookingState, stayState) {
+  return Number(bookingState?.roomCount ?? roomState?.roomCount ?? getStaySearchCount(stayState ?? state.stay));
 }
 
 function formatPaymentStatus(status) {
