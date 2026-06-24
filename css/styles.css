@@ -335,6 +335,66 @@ h3 {
   width: 100%;
 }
 
+.label-with-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.info-badge {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  border: 1px solid rgba(141, 84, 48, 0.18);
+  background: rgba(234, 211, 184, 0.55);
+  color: var(--accent-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: default;
+}
+
+.info-badge:focus-visible {
+  outline: 2px solid rgba(141, 84, 48, 0.35);
+  outline-offset: 2px;
+}
+
+.info-badge::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.55rem);
+  transform: translateX(-50%) translateY(0.2rem);
+  min-width: 13rem;
+  max-width: min(18rem, 70vw);
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.7rem;
+  border: var(--border);
+  background: rgba(46, 36, 29, 0.96);
+  color: #fffdfa;
+  box-shadow: var(--shadow-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+  z-index: 20;
+}
+
+.info-badge:hover::after,
+.info-badge:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
 .booking-search-form > *,
 .compact-search-form > *,
 .guest-form > * {

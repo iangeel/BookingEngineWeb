@@ -4,6 +4,12 @@ export const THEME_BRAND = {
 };
 
 export const THEME_SITE_CONTENT = {
+  bookingFlow: {
+    availabilitySearchMode: "rooms",
+    defaultRoomCount: 1,
+    minRoomCount: 1,
+    maxRoomCount: 30
+  },
   company: {
     name: "PURSISIMPLU VAMA VECHE SRL",
     taxId: "45359420",

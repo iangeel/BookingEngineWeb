@@ -54,23 +54,24 @@ function toFrontendRoom(room, index) {
 }
 
 export async function getAvailability(params = {}) {
-  const { checkin, checkout, guests = 1 } = params;
-  const guestCount = Math.max(1, Number(guests || 1));
+  const { checkin, checkout, guests, rooms: requestedRooms } = params;
   const search = new URLSearchParams({
-    guests: String(guestCount),
     startDate: checkin,
     endDate: checkout
   });
+
+  if (requestedRooms != null) {
+    search.set("rooms", String(Math.max(1, Number(requestedRooms || 1))));
+  } else {
+    search.set("guests", String(Math.max(1, Number(guests || 1))));
+  }
   const availability = await request(`/availability?${search.toString()}`);
 
   const rooms = availability.map(toFrontendRoom);
 
   return {
     endpoint: `${API_BASE_URL}/availability?${search.toString()}`,
-    request: {
-      ...params,
-      guests: guestCount
-    },
+    request: params,
     data: rooms
   };
 }
@@ -79,14 +80,19 @@ export async function createBooking(payload) {
   const roomIds = Array.isArray(payload.roomIds)
     ? payload.roomIds.map((roomId) => Number(roomId)).filter(Number.isFinite)
     : [];
+  const requestBody = {
+    roomIds,
+    startDate: payload.startDate,
+    endDate: payload.endDate
+  };
+
+  if (payload.guestCount != null) {
+    requestBody.guestCount = Math.max(1, Number(payload.guestCount));
+  }
+
   const data = await request("/bookings", {
     method: "POST",
-    body: JSON.stringify({
-      roomIds,
-      guestCount: Math.max(1, Number(payload.guestCount || payload.guests || 1)),
-      startDate: payload.startDate,
-      endDate: payload.endDate
-    })
+    body: JSON.stringify(requestBody)
   });
 
   return {
