@@ -11,7 +11,7 @@ import {
   isAdminUnauthorizedError,
   updateAdminBooking,
   updateAdminRoom
-} from "./api.js?v=20260610c";
+} from "./api.js?v=20260624a";
 import { THEME_BRAND } from "./themes/pursisimpluvama_theme.js?v=20260531a";
 
 const LANGUAGE_KEY = "booking-engine-language";
@@ -63,6 +63,7 @@ const TRANSLATIONS = {
     buttonDiscard: "Renunta",
     buttonEdit: "Editeaza",
     buttonDelete: "Sterge",
+    buttonRates: "Tarife",
     buttonNext: "Urmatorul",
     buttonChangeDates: "Modifica perioada",
     buttonLoading: "Se incarca...",
@@ -84,8 +85,13 @@ const TRANSLATIONS = {
     labelRoomNumber: "Numar camera",
     labelCapacity: "Capacitate",
     labelRate: "Tarif pe noapte",
+    labelMinimumNights: "Minimum nopti",
     labelDiscount: "Discount",
     labelRatePeriods: "Perioade tarifare",
+    roomRatesTitle: "Tarife camera",
+    roomRatesLegendBase: "Tarif de baza",
+    roomRatesLegendOverride: "Perioada tarifara configurata",
+    roomRatesMinimumNightsShort: "min. {count} nopti",
     labelIncludedRooms: "Camere incluse",
     labelGuestCount: "Numar oaspeti",
     labelStatus: "Status",
@@ -184,6 +190,7 @@ const TRANSLATIONS = {
     buttonDiscard: "Discard",
     buttonEdit: "Edit",
     buttonDelete: "Delete",
+    buttonRates: "Rates",
     buttonNext: "Next",
     buttonChangeDates: "Change dates",
     buttonLoading: "Loading...",
@@ -205,8 +212,13 @@ const TRANSLATIONS = {
     labelRoomNumber: "Room number",
     labelCapacity: "Capacity",
     labelRate: "Rate per night",
+    labelMinimumNights: "Minimum nights",
     labelDiscount: "Discount",
     labelRatePeriods: "Rate periods",
+    roomRatesTitle: "Room rates",
+    roomRatesLegendBase: "Base rate",
+    roomRatesLegendOverride: "Configured rate period",
+    roomRatesMinimumNightsShort: "min. {count} nights",
     labelIncludedRooms: "Included rooms",
     labelGuestCount: "Guest count",
     labelStatus: "Status",
@@ -279,6 +291,8 @@ const state = {
   selectedBookingId: null,
   editingRoomId: null,
   roomDraft: null,
+  viewingRatesRoomId: null,
+  ratesCalendarCursor: "",
   editingBookingId: null,
   bookingDraft: null,
   bookingModalStep: "dates",
@@ -315,6 +329,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     wirePanelActions();
     wireRoomModal();
+    wireRatesModal();
     wireBookingModal();
     renderPanelState();
     await loadAdminData();
@@ -716,6 +731,28 @@ function wireRoomModal() {
   });
 }
 
+function wireRatesModal() {
+  document.querySelectorAll("[data-admin-close-rates-modal]").forEach((button) => {
+    button.addEventListener("click", closeRatesModal);
+  });
+
+  const previousMonthButton = document.querySelector("[data-admin-rates-prev-month]");
+  if (previousMonthButton) {
+    previousMonthButton.addEventListener("click", () => {
+      state.ratesCalendarCursor = formatLocalDateIso(addMonths(getRatesCalendarMonthStart(), -1));
+      renderRatesModal();
+    });
+  }
+
+  const nextMonthButton = document.querySelector("[data-admin-rates-next-month]");
+  if (nextMonthButton) {
+    nextMonthButton.addEventListener("click", () => {
+      state.ratesCalendarCursor = formatLocalDateIso(addMonths(getRatesCalendarMonthStart(), 1));
+      renderRatesModal();
+    });
+  }
+}
+
 function wireBookingModal() {
   document.querySelectorAll("[data-admin-close-booking-modal]").forEach((button) => {
     button.addEventListener("click", closeBookingModal);
@@ -955,6 +992,7 @@ function renderPanelState() {
   renderBookingsTable();
   renderSelectedBookingBar();
   renderRoomModal();
+  renderRatesModal();
   renderBookingModal();
 }
 
@@ -1183,7 +1221,6 @@ function renderRoomModal() {
             <td>
               <div class="admin-rate-period-summary">
                 <strong>${escapeHtml(currentRoom.name)}</strong>
-                <span class="note">${formatRatePeriodsSummary(currentRoom.ratePeriods)}</span>
               </div>
             </td>
             <td>${escapeHtml(currentRoom.roomNumber || "-")}</td>
@@ -1197,6 +1234,7 @@ function renderRoomModal() {
             <td>${formatPercent(currentRoom.discount)}</td>
             <td>
               <div class="admin-row-actions">
+                <button class="button button-secondary" type="button" data-room-rates="${currentRoom.id}">${t("buttonRates")}</button>
                 <button class="button button-success" type="button" data-room-edit="${currentRoom.id}">${t("buttonEdit")}</button>
                 <button class="button button-danger" type="button" data-room-delete="${currentRoom.id}">${t("buttonDelete")}</button>
               </div>
@@ -1212,6 +1250,21 @@ function renderRoomModal() {
       state.editingRoomId = Number(button.dataset.roomEdit);
       state.roomDraft = createRoomDraft(state.rooms.find((item) => item.id === state.editingRoomId));
       renderRoomModal();
+    });
+  });
+
+  list.querySelectorAll("[data-room-rates]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const roomId = Number(button.dataset.roomRates);
+      const roomForRates = state.rooms.find((item) => item.id === roomId);
+      if (!roomForRates) {
+        return;
+      }
+
+      state.viewingRatesRoomId = roomId;
+      state.ratesCalendarCursor = getInitialRatesCalendarCursor(roomForRates);
+      renderRatesModal();
+      openModal("rates");
     });
   });
 
@@ -1317,6 +1370,37 @@ function renderBookingModal() {
   });
 }
 
+function renderRatesModal() {
+  const modal = document.querySelector("[data-admin-rates-modal]");
+  const title = document.querySelector("[data-admin-rates-modal-title]");
+  const roomMeta = document.querySelector("[data-admin-rates-room-meta]");
+  const monthLabel = document.querySelector("[data-admin-rates-month-label]");
+  const weekdays = document.querySelector("[data-admin-rates-weekdays]");
+  const calendarGrid = document.querySelector("[data-admin-rates-grid]");
+
+  if (!modal || !title || !roomMeta || !monthLabel || !weekdays || !calendarGrid) {
+    return;
+  }
+
+  const room = state.rooms.find((item) => item.id === state.viewingRatesRoomId);
+  if (!room) {
+    closeRatesModal();
+    return;
+  }
+
+  const monthStart = getRatesCalendarMonthStart();
+  title.textContent = t("roomRatesTitle");
+  roomMeta.innerHTML = `
+    <strong>${escapeHtml(formatRoomLabel(room))}</strong>
+    <span>${escapeHtml(t("labelRate"))}: ${escapeHtml(formatCurrency(room.ratePerNight))}</span>
+  `;
+  monthLabel.textContent = formatRatesMonthLabel(monthStart);
+  weekdays.innerHTML = getRatesWeekdayLabels().map((label) => `
+    <span class="admin-rates-calendar-weekday">${escapeHtml(label)}</span>
+  `).join("");
+  calendarGrid.innerHTML = buildRatesCalendarDays(room, monthStart);
+}
+
 function setElementVisibility(element, isVisible) {
   if (!element) {
     return;
@@ -1362,7 +1446,8 @@ function createRatePeriodDraft(period = {}) {
   return {
     startDate: period.startDate || "",
     endDate: period.endDate || "",
-    ratePerNight: period.ratePerNight ?? ""
+    ratePerNight: period.ratePerNight ?? "",
+    minimumNights: period.minimumNights ?? ""
   };
 }
 
@@ -1381,7 +1466,8 @@ function collectRoomDraftFromForm(form) {
     ratePeriods: Array.from(form.querySelectorAll("[data-admin-rate-period-item]")).map((row) => ({
       startDate: row.querySelector('[name="ratePeriodStartDate"]')?.value || "",
       endDate: row.querySelector('[name="ratePeriodEndDate"]')?.value || "",
-      ratePerNight: row.querySelector('[name="ratePeriodRatePerNight"]')?.value || ""
+      ratePerNight: row.querySelector('[name="ratePeriodRatePerNight"]')?.value || "",
+      minimumNights: row.querySelector('[name="ratePeriodMinimumNights"]')?.value || ""
     }))
   };
 }
@@ -1434,6 +1520,10 @@ function renderRatePeriodInputs(ratePeriods) {
           <span>${t("labelRate")}</span>
           <input name="ratePeriodRatePerNight" type="number" min="0" step="0.01" value="${escapeHtml(period.ratePerNight ?? "")}" required>
         </label>
+        <label>
+          <span>${t("labelMinimumNights")}</span>
+          <input name="ratePeriodMinimumNights" type="number" min="1" step="1" value="${escapeHtml(period.minimumNights ?? "")}">
+        </label>
         <div class="admin-inline-actions">
           <button class="button button-secondary" type="button" data-admin-remove-rate-period="${index}">${t("buttonRemoveRatePeriod")}</button>
         </div>
@@ -1443,7 +1533,12 @@ function renderRatePeriodInputs(ratePeriods) {
 }
 
 function openModal(type) {
-  const modal = document.querySelector(type === "room" ? "[data-admin-room-modal]" : "[data-admin-booking-modal]");
+  const selector = {
+    room: "[data-admin-room-modal]",
+    booking: "[data-admin-booking-modal]",
+    rates: "[data-admin-rates-modal]"
+  }[type];
+  const modal = selector ? document.querySelector(selector) : null;
   if (modal) {
     modal.hidden = false;
   }
@@ -1465,6 +1560,15 @@ function closeBookingModal() {
   state.availableBookingRooms = [];
   state.loadingAvailableBookingRooms = false;
   const modal = document.querySelector("[data-admin-booking-modal]");
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+function closeRatesModal() {
+  state.viewingRatesRoomId = null;
+  state.ratesCalendarCursor = "";
+  const modal = document.querySelector("[data-admin-rates-modal]");
   if (modal) {
     modal.hidden = true;
   }
@@ -1545,6 +1649,21 @@ function formatCurrency(value) {
   }).format(Number(value));
 }
 
+function formatCompactCurrency(value) {
+  if (value == null || value === "") {
+    return "-";
+  }
+
+  const amount = Number(value);
+  const hasDecimals = !Number.isInteger(amount);
+  const formattedAmount = new Intl.NumberFormat(LOCALES[state.language], {
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: hasDecimals ? 2 : 0
+  }).format(amount);
+
+  return `${formattedAmount} RON`;
+}
+
 function formatPercent(value) {
   if (value == null || value === "") {
     return "0%";
@@ -1553,9 +1672,40 @@ function formatPercent(value) {
   return `${Math.round(Number(value) * 100)}%`;
 }
 
+function formatGroupedRoomNames(roomNames) {
+  if (!Array.isArray(roomNames) || !roomNames.length) {
+    return "-";
+  }
+
+  const groupedNames = roomNames.reduce((groups, roomName) => {
+    const normalizedRoomName = String(roomName || "").trim();
+    if (!normalizedRoomName) {
+      return groups;
+    }
+
+    const existingGroup = groups.find((group) => group.name === normalizedRoomName);
+    if (existingGroup) {
+      existingGroup.count += 1;
+      return groups;
+    }
+
+    groups.push({
+      name: normalizedRoomName,
+      count: 1
+    });
+    return groups;
+  }, []);
+
+  if (!groupedNames.length) {
+    return "-";
+  }
+
+  return groupedNames.map((group) => `${group.count}x ${group.name}`).join(", ");
+}
+
 function formatBookingRoomTypes(booking) {
   if (Array.isArray(booking?.roomNames) && booking.roomNames.length) {
-    return booking.roomNames.join(", ");
+    return formatGroupedRoomNames(booking.roomNames);
   }
 
   return booking?.roomName || "-";
@@ -1575,7 +1725,9 @@ function formatRatePeriodsSummary(ratePeriods) {
   }
 
   return ratePeriods
-    .map((period) => `${period.startDate} → ${period.endDate} · ${formatCurrency(period.ratePerNight)}`)
+    .map((period) => `${period.startDate} → ${period.endDate} · ${formatCurrency(period.ratePerNight)}${
+      period.minimumNights ? ` · ${t("labelMinimumNights")}: ${period.minimumNights}` : ""
+    }`)
     .join(" | ");
 }
 
@@ -1598,12 +1750,91 @@ function formatDateTime(value) {
   });
 }
 
+function formatRatesMonthLabel(date) {
+  return date.toLocaleDateString(LOCALES[state.language], {
+    month: "long",
+    year: "numeric"
+  });
+}
+
 function formatStayRange(startDate, endDate) {
   if (!startDate || !endDate) {
     return "-";
   }
 
   return `${startDate} → ${endDate}`;
+}
+
+function getInitialRatesCalendarCursor(room) {
+  const firstConfiguredPeriod = Array.isArray(room?.ratePeriods)
+    ? [...room.ratePeriods]
+      .filter((period) => period?.startDate)
+      .sort((left, right) => String(left.startDate).localeCompare(String(right.startDate)))[0]
+    : null;
+
+  if (firstConfiguredPeriod?.startDate) {
+    const firstConfiguredDate = parseLocalDateInput(firstConfiguredPeriod.startDate);
+    if (firstConfiguredDate) {
+      return formatLocalDateIso(startOfMonth(firstConfiguredDate));
+    }
+  }
+
+  return formatLocalDateIso(startOfMonth(new Date()));
+}
+
+function getRatesCalendarMonthStart() {
+  const selectedMonth = parseLocalDateInput(state.ratesCalendarCursor);
+  return startOfMonth(selectedMonth || new Date());
+}
+
+function getRatesWeekdayLabels() {
+  const mondayReference = new Date(2026, 5, 1);
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(mondayReference, index);
+    return date.toLocaleDateString(LOCALES[state.language], { weekday: "short" });
+  });
+}
+
+function buildRatesCalendarDays(room, monthStart) {
+  const monthStartDayIndex = getMondayBasedDayIndex(monthStart);
+  const calendarStart = addDays(monthStart, -monthStartDayIndex);
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const currentDate = addDays(calendarStart, index);
+    const currentDateIso = formatLocalDateIso(currentDate);
+    const isCurrentMonth = currentDate.getMonth() === monthStart.getMonth();
+
+    if (!isCurrentMonth) {
+      return `<div class="admin-rates-calendar-day is-empty" aria-hidden="true"></div>`;
+    }
+
+    const configuredPeriod = findApplicableRatePeriod(room.ratePeriods, currentDateIso);
+    const effectiveRate = configuredPeriod?.ratePerNight ?? room.ratePerNight;
+    const minimumNights = configuredPeriod?.minimumNights;
+
+    return `
+      <article class="admin-rates-calendar-day ${configuredPeriod ? "is-override" : "is-base"}">
+        <span class="admin-rates-calendar-date">${currentDate.getDate()}</span>
+        <strong class="admin-rates-calendar-rate">${escapeHtml(formatCompactCurrency(effectiveRate))}</strong>
+        ${minimumNights ? `
+          <span class="admin-rates-calendar-minimum">${escapeHtml(t("roomRatesMinimumNightsShort", { count: minimumNights }))}</span>
+        ` : ""}
+      </article>
+    `;
+  }).join("");
+}
+
+function findApplicableRatePeriod(ratePeriods, dateIso) {
+  if (!Array.isArray(ratePeriods) || !ratePeriods.length) {
+    return null;
+  }
+
+  return ratePeriods.find((period) =>
+    period?.startDate
+    && period?.endDate
+    && String(period.startDate) <= dateIso
+    && String(period.endDate) >= dateIso
+  ) || null;
 }
 
 function formatClientName(booking) {
@@ -1808,6 +2039,42 @@ function parseBackendDateTime(value) {
   }
 
   return date;
+}
+
+function parseLocalDateInput(value) {
+  if (!value) {
+    return null;
+  }
+
+  const [year, month, day] = String(value).split("-").map(Number);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day);
+}
+
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function addMonths(date, months) {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1);
+}
+
+function addDays(date, days) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+}
+
+function getMondayBasedDayIndex(date) {
+  return (date.getDay() + 6) % 7;
+}
+
+function formatLocalDateIso(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function escapeHtml(value) {

@@ -1152,6 +1152,10 @@ select:focus {
   display: none;
 }
 
+.admin-modal--rates {
+  z-index: 45;
+}
+
 .admin-modal-backdrop {
   position: absolute;
   inset: 0;
@@ -1198,6 +1202,127 @@ select:focus {
 .admin-modal-section h3 {
   margin: 0;
   font-size: 1.35rem;
+}
+
+.admin-rates-modal-card {
+  width: min(100%, 1120px);
+}
+
+.admin-rates-room-meta {
+  display: grid;
+  gap: 0.2rem;
+  color: var(--text-soft);
+}
+
+.admin-rates-room-meta strong {
+  color: var(--text);
+}
+
+.admin-rates-toolbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-rates-month-label {
+  margin: 0;
+  text-align: center;
+  font-size: 1.5rem;
+  text-transform: capitalize;
+}
+
+.admin-rates-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-rates-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.admin-rates-legend-swatch {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 0.3rem;
+  border: 1px solid rgba(141, 84, 48, 0.18);
+}
+
+.admin-rates-legend-swatch.is-base {
+  background: var(--bg-soft);
+}
+
+.admin-rates-legend-swatch.is-override {
+  background: rgba(45, 124, 100, 0.12);
+  border-color: rgba(45, 124, 100, 0.28);
+}
+
+.admin-rates-calendar-wrap {
+  overflow-x: auto;
+}
+
+.admin-rates-calendar {
+  min-width: 720px;
+}
+
+.admin-rates-calendar-weekdays,
+.admin-rates-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-rates-calendar-weekday {
+  padding: 0.4rem 0.2rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.admin-rates-calendar-day {
+  min-height: 7.5rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  border: var(--border);
+  background: var(--bg-soft);
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+}
+
+.admin-rates-calendar-day.is-override {
+  background: rgba(45, 124, 100, 0.08);
+  border-color: rgba(45, 124, 100, 0.24);
+}
+
+.admin-rates-calendar-day.is-empty {
+  background: transparent;
+  border-style: dashed;
+  opacity: 0.3;
+}
+
+.admin-rates-calendar-date {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.admin-rates-calendar-rate {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.admin-rates-calendar-minimum {
+  font-size: 0.82rem;
+  color: var(--text-soft);
 }
 
 .summary-card img {

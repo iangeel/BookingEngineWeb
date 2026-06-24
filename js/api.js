@@ -175,7 +175,10 @@ function normalizeAdminRoomPayload(payload) {
       ? payload.ratePeriods.map((period) => ({
         startDate: period.startDate,
         endDate: period.endDate,
-        ratePerNight: Number(period.ratePerNight)
+        ratePerNight: Number(period.ratePerNight),
+        minimumNights: period.minimumNights === "" || period.minimumNights == null
+          ? null
+          : Number(period.minimumNights)
       }))
       : []
   };
