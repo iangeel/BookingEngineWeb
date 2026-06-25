@@ -9,9 +9,10 @@ import {
   getAdminBookings,
   getAdminRooms,
   isAdminUnauthorizedError,
+  updateAdminRoomRateOverride,
   updateAdminBooking,
   updateAdminRoom
-} from "./api.js?v=20260624a";
+} from "./api.js?v=20260624c";
 import { THEME_BRAND } from "./themes/pursisimpluvama_theme.js?v=20260531a";
 
 const LANGUAGE_KEY = "booking-engine-language";
@@ -92,6 +93,18 @@ const TRANSLATIONS = {
     roomRatesLegendBase: "Tarif de baza",
     roomRatesLegendOverride: "Perioada tarifara configurata",
     roomRatesMinimumNightsShort: "min. {count} nopti",
+    roomRatesSelectionHint: "Selecteaza prima si ultima zi din perioada pe care vrei sa o actualizezi.",
+    roomRatesSelectionEmpty: "Nicio perioada selectata.",
+    roomRatesSelectionLabel: "Perioada selectata",
+    roomRatesUpdateRate: "Actualizeaza tariful pe noapte",
+    roomRatesUpdateMinimumNights: "Actualizeaza minimum nopti",
+    buttonSaveRateOverride: "Salveaza tarifele",
+    buttonSavingRateOverride: "Se salveaza...",
+    roomRatesSaved: "Tarifele selectate au fost actualizate.",
+    validationRateSelectionRequired: "Selecteaza cel putin o zi din calendar.",
+    validationRateOverrideRequired: "Selecteaza cel putin o valoare de actualizat.",
+    validationRateOverrideAmountRequired: "Completeaza tariful pe noapte pentru perioada selectata.",
+    validationRateOverrideMinimumRequired: "Completeaza minimum de nopti pentru perioada selectata.",
     labelIncludedRooms: "Camere incluse",
     labelGuestCount: "Numar oaspeti",
     labelStatus: "Status",
@@ -219,6 +232,18 @@ const TRANSLATIONS = {
     roomRatesLegendBase: "Base rate",
     roomRatesLegendOverride: "Configured rate period",
     roomRatesMinimumNightsShort: "min. {count} nights",
+    roomRatesSelectionHint: "Select the first and last day in the range you want to update.",
+    roomRatesSelectionEmpty: "No range selected.",
+    roomRatesSelectionLabel: "Selected range",
+    roomRatesUpdateRate: "Update nightly rate",
+    roomRatesUpdateMinimumNights: "Update minimum nights",
+    buttonSaveRateOverride: "Save rates",
+    buttonSavingRateOverride: "Saving...",
+    roomRatesSaved: "The selected rates were updated.",
+    validationRateSelectionRequired: "Select at least one day from the calendar.",
+    validationRateOverrideRequired: "Select at least one value to update.",
+    validationRateOverrideAmountRequired: "Enter the nightly rate for the selected range.",
+    validationRateOverrideMinimumRequired: "Enter the minimum nights for the selected range.",
     labelIncludedRooms: "Included rooms",
     labelGuestCount: "Guest count",
     labelStatus: "Status",
@@ -293,6 +318,11 @@ const state = {
   roomDraft: null,
   viewingRatesRoomId: null,
   ratesCalendarCursor: "",
+  ratesSelectionAnchorDate: "",
+  ratesSelectionStartDate: "",
+  ratesSelectionEndDate: "",
+  ratesEditorDraft: null,
+  savingRatesOverride: false,
   editingBookingId: null,
   bookingDraft: null,
   bookingModalStep: "dates",
@@ -751,6 +781,101 @@ function wireRatesModal() {
       renderRatesModal();
     });
   }
+
+  const calendarGrid = document.querySelector("[data-admin-rates-grid]");
+  if (calendarGrid) {
+    calendarGrid.addEventListener("click", (event) => {
+      const dayCell = event.target.closest("[data-admin-rates-date]");
+      if (!dayCell) {
+        return;
+      }
+
+      applyRatesSelection(dayCell.dataset.adminRatesDate);
+      renderRatesModal();
+    });
+  }
+
+  const ratesForm = document.querySelector("[data-admin-rates-form]");
+  if (!ratesForm) {
+    return;
+  }
+
+  ratesForm.addEventListener("input", () => {
+    state.ratesEditorDraft = collectRatesEditorDraft(ratesForm, state.ratesEditorDraft || createRatesEditorDraft());
+    renderRatesModal();
+  });
+
+  ratesForm.addEventListener("change", () => {
+    state.ratesEditorDraft = collectRatesEditorDraft(ratesForm, state.ratesEditorDraft || createRatesEditorDraft());
+    renderRatesModal();
+  });
+
+  ratesForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const room = getCurrentRatesRoom();
+    const selectedRange = getSelectedRatesRange();
+    const draft = collectRatesEditorDraft(ratesForm, state.ratesEditorDraft || createRatesEditorDraft());
+
+    if (!room || !selectedRange) {
+      setFeedback(t("validationRateSelectionRequired"), "error");
+      return;
+    }
+
+    if (!draft.updateRatePerNight && !draft.updateMinimumNights) {
+      setFeedback(t("validationRateOverrideRequired"), "error");
+      return;
+    }
+
+    if (draft.updateRatePerNight && (draft.ratePerNight === "" || draft.ratePerNight == null)) {
+      setFeedback(t("validationRateOverrideAmountRequired"), "error");
+      return;
+    }
+
+    if (draft.updateMinimumNights && (draft.minimumNights === "" || draft.minimumNights == null)) {
+      setFeedback(t("validationRateOverrideMinimumRequired"), "error");
+      return;
+    }
+
+    state.savingRatesOverride = true;
+    state.ratesEditorDraft = draft;
+    renderRatesModal();
+
+    try {
+      const result = await updateAdminRoomRateOverride(state.auth.accessToken, room.id, {
+        startDate: selectedRange.startDate,
+        endDate: selectedRange.endDate,
+        updateRatePerNight: draft.updateRatePerNight,
+        ratePerNight: draft.ratePerNight,
+        updateMinimumNights: draft.updateMinimumNights,
+        minimumNights: draft.minimumNights
+      });
+
+      const existingRoomIndex = state.rooms.findIndex((item) => item.id === room.id);
+      if (existingRoomIndex !== -1) {
+        state.rooms.splice(existingRoomIndex, 1, result.data);
+        state.rooms = sortRooms(state.rooms);
+      }
+
+      state.ratesSelectionAnchorDate = "";
+      state.ratesSelectionStartDate = "";
+      state.ratesSelectionEndDate = "";
+      state.ratesEditorDraft = createRatesEditorDraft();
+      setFeedback(t("roomRatesSaved"), "success");
+      renderPanelState();
+    } catch (error) {
+      if (isAdminUnauthorizedError(error)) {
+        clearAdminAuth();
+        window.location.replace("admin.html");
+        return;
+      }
+
+      setFeedback(error.message || t("roomsLoadFailed"), "error");
+    } finally {
+      state.savingRatesOverride = false;
+      renderRatesModal();
+    }
+  });
 }
 
 function wireBookingModal() {
@@ -1263,6 +1388,11 @@ function renderRoomModal() {
 
       state.viewingRatesRoomId = roomId;
       state.ratesCalendarCursor = getInitialRatesCalendarCursor(roomForRates);
+      state.ratesSelectionAnchorDate = "";
+      state.ratesSelectionStartDate = "";
+      state.ratesSelectionEndDate = "";
+      state.ratesEditorDraft = createRatesEditorDraft();
+      state.savingRatesOverride = false;
       renderRatesModal();
       openModal("rates");
     });
@@ -1377,12 +1507,15 @@ function renderRatesModal() {
   const monthLabel = document.querySelector("[data-admin-rates-month-label]");
   const weekdays = document.querySelector("[data-admin-rates-weekdays]");
   const calendarGrid = document.querySelector("[data-admin-rates-grid]");
+  const selectionHint = document.querySelector("[data-admin-rates-selection-hint]");
+  const selectionSummary = document.querySelector("[data-admin-rates-selection-summary]");
+  const ratesForm = document.querySelector("[data-admin-rates-form]");
 
-  if (!modal || !title || !roomMeta || !monthLabel || !weekdays || !calendarGrid) {
+  if (!modal || !title || !roomMeta || !monthLabel || !weekdays || !calendarGrid || !selectionHint || !selectionSummary || !ratesForm) {
     return;
   }
 
-  const room = state.rooms.find((item) => item.id === state.viewingRatesRoomId);
+  const room = getCurrentRatesRoom();
   if (!room) {
     closeRatesModal();
     return;
@@ -1399,6 +1532,9 @@ function renderRatesModal() {
     <span class="admin-rates-calendar-weekday">${escapeHtml(label)}</span>
   `).join("");
   calendarGrid.innerHTML = buildRatesCalendarDays(room, monthStart);
+  selectionHint.textContent = t("roomRatesSelectionHint");
+  selectionSummary.innerHTML = renderRatesSelectionSummary();
+  hydrateRatesEditorForm(ratesForm);
 }
 
 function setElementVisibility(element, isVisible) {
@@ -1448,6 +1584,15 @@ function createRatePeriodDraft(period = {}) {
     endDate: period.endDate || "",
     ratePerNight: period.ratePerNight ?? "",
     minimumNights: period.minimumNights ?? ""
+  };
+}
+
+function createRatesEditorDraft(values = {}) {
+  return {
+    updateRatePerNight: Boolean(values.updateRatePerNight),
+    ratePerNight: values.ratePerNight ?? "",
+    updateMinimumNights: Boolean(values.updateMinimumNights),
+    minimumNights: values.minimumNights ?? ""
   };
 }
 
@@ -1532,6 +1677,37 @@ function renderRatePeriodInputs(ratePeriods) {
   `).join("");
 }
 
+function collectRatesEditorDraft(form, baseDraft = createRatesEditorDraft()) {
+  return {
+    ...baseDraft,
+    updateRatePerNight: Boolean(form.elements.updateRatePerNight.checked),
+    ratePerNight: form.elements.ratePerNight.value,
+    updateMinimumNights: Boolean(form.elements.updateMinimumNights.checked),
+    minimumNights: form.elements.minimumNights.value
+  };
+}
+
+function hydrateRatesEditorForm(form) {
+  const draft = state.ratesEditorDraft || createRatesEditorDraft();
+  const selectedRange = getSelectedRatesRange();
+  const isEditable = Boolean(selectedRange) && !state.savingRatesOverride;
+
+  form.elements.updateRatePerNight.checked = Boolean(draft.updateRatePerNight);
+  form.elements.ratePerNight.value = draft.ratePerNight ?? "";
+  form.elements.updateMinimumNights.checked = Boolean(draft.updateMinimumNights);
+  form.elements.minimumNights.value = draft.minimumNights ?? "";
+  form.elements.ratePerNight.disabled = !isEditable || !draft.updateRatePerNight;
+  form.elements.minimumNights.disabled = !isEditable || !draft.updateMinimumNights;
+  form.elements.updateRatePerNight.disabled = !isEditable;
+  form.elements.updateMinimumNights.disabled = !isEditable;
+
+  const saveButton = form.querySelector("[data-admin-rates-save]");
+  if (saveButton) {
+    saveButton.disabled = !isEditable || state.savingRatesOverride;
+    saveButton.textContent = state.savingRatesOverride ? t("buttonSavingRateOverride") : t("buttonSaveRateOverride");
+  }
+}
+
 function openModal(type) {
   const selector = {
     room: "[data-admin-room-modal]",
@@ -1568,6 +1744,11 @@ function closeBookingModal() {
 function closeRatesModal() {
   state.viewingRatesRoomId = null;
   state.ratesCalendarCursor = "";
+  state.ratesSelectionAnchorDate = "";
+  state.ratesSelectionStartDate = "";
+  state.ratesSelectionEndDate = "";
+  state.ratesEditorDraft = null;
+  state.savingRatesOverride = false;
   const modal = document.querySelector("[data-admin-rates-modal]");
   if (modal) {
     modal.hidden = true;
@@ -1757,6 +1938,18 @@ function formatRatesMonthLabel(date) {
   });
 }
 
+function renderRatesSelectionSummary() {
+  const selectedRange = getSelectedRatesRange();
+  if (!selectedRange) {
+    return `<span class="note">${escapeHtml(t("roomRatesSelectionEmpty"))}</span>`;
+  }
+
+  return `
+    <strong>${escapeHtml(t("roomRatesSelectionLabel"))}:</strong>
+    <span>${escapeHtml(formatStayRange(selectedRange.startDate, selectedRange.endDate))}</span>
+  `;
+}
+
 function formatStayRange(startDate, endDate) {
   if (!startDate || !endDate) {
     return "-";
@@ -1811,15 +2004,20 @@ function buildRatesCalendarDays(room, monthStart) {
     const configuredPeriod = findApplicableRatePeriod(room.ratePeriods, currentDateIso);
     const effectiveRate = configuredPeriod?.ratePerNight ?? room.ratePerNight;
     const minimumNights = configuredPeriod?.minimumNights;
+    const selectionClassName = getRatesSelectionClassName(currentDateIso);
 
     return `
-      <article class="admin-rates-calendar-day ${configuredPeriod ? "is-override" : "is-base"}">
+      <button
+        class="admin-rates-calendar-day ${configuredPeriod ? "is-override" : "is-base"} ${selectionClassName}"
+        type="button"
+        data-admin-rates-date="${currentDateIso}"
+      >
         <span class="admin-rates-calendar-date">${currentDate.getDate()}</span>
         <strong class="admin-rates-calendar-rate">${escapeHtml(formatCompactCurrency(effectiveRate))}</strong>
         ${minimumNights ? `
           <span class="admin-rates-calendar-minimum">${escapeHtml(t("roomRatesMinimumNightsShort", { count: minimumNights }))}</span>
         ` : ""}
-      </article>
+      </button>
     `;
   }).join("");
 }
@@ -1835,6 +2033,91 @@ function findApplicableRatePeriod(ratePeriods, dateIso) {
     && String(period.startDate) <= dateIso
     && String(period.endDate) >= dateIso
   ) || null;
+}
+
+function applyRatesSelection(dateIso) {
+  if (!state.ratesSelectionAnchorDate || (state.ratesSelectionStartDate && state.ratesSelectionEndDate && !state.ratesSelectionAnchorDate)) {
+    state.ratesSelectionAnchorDate = dateIso;
+    state.ratesSelectionStartDate = dateIso;
+    state.ratesSelectionEndDate = dateIso;
+  } else {
+    const sortedDates = [state.ratesSelectionAnchorDate, dateIso].sort();
+    state.ratesSelectionAnchorDate = "";
+    state.ratesSelectionStartDate = sortedDates[0];
+    state.ratesSelectionEndDate = sortedDates[1];
+  }
+
+  const room = getCurrentRatesRoom();
+  state.ratesEditorDraft = buildPrefilledRatesEditorDraft(room, getSelectedRatesRange());
+}
+
+function getCurrentRatesRoom() {
+  return state.rooms.find((item) => item.id === state.viewingRatesRoomId) || null;
+}
+
+function getSelectedRatesRange() {
+  if (!state.ratesSelectionStartDate || !state.ratesSelectionEndDate) {
+    return null;
+  }
+
+  const sortedDates = [state.ratesSelectionStartDate, state.ratesSelectionEndDate].sort();
+  return {
+    startDate: sortedDates[0],
+    endDate: sortedDates[1]
+  };
+}
+
+function getRatesSelectionClassName(dateIso) {
+  const selectedRange = getSelectedRatesRange();
+  if (!selectedRange) {
+    return "";
+  }
+
+  if (selectedRange.startDate === dateIso && selectedRange.endDate === dateIso) {
+    return "is-selected-single";
+  }
+
+  if (selectedRange.startDate === dateIso) {
+    return "is-selected-start";
+  }
+
+  if (selectedRange.endDate === dateIso) {
+    return "is-selected-end";
+  }
+
+  if (selectedRange.startDate < dateIso && selectedRange.endDate > dateIso) {
+    return "is-selected-range";
+  }
+
+  return "";
+}
+
+function buildPrefilledRatesEditorDraft(room, selectedRange) {
+  if (!room || !selectedRange) {
+    return createRatesEditorDraft();
+  }
+
+  const effectiveDayValues = [];
+  let currentDate = parseLocalDateInput(selectedRange.startDate);
+  const endDate = parseLocalDateInput(selectedRange.endDate);
+
+  while (currentDate && endDate && currentDate <= endDate) {
+    const currentDateIso = formatLocalDateIso(currentDate);
+    const configuredPeriod = findApplicableRatePeriod(room.ratePeriods, currentDateIso);
+    effectiveDayValues.push({
+      ratePerNight: configuredPeriod?.ratePerNight ?? room.ratePerNight,
+      minimumNights: configuredPeriod?.minimumNights ?? null
+    });
+    currentDate = addDays(currentDate, 1);
+  }
+
+  const uniqueRates = Array.from(new Set(effectiveDayValues.map((entry) => String(entry.ratePerNight))));
+  const uniqueMinimumNights = Array.from(new Set(effectiveDayValues.map((entry) => String(entry.minimumNights ?? ""))));
+
+  return createRatesEditorDraft({
+    ratePerNight: uniqueRates.length === 1 ? uniqueRates[0] : "",
+    minimumNights: uniqueMinimumNights.length === 1 ? uniqueMinimumNights[0] : ""
+  });
 }
 
 function formatClientName(booking) {
