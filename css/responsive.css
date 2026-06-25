@@ -26,6 +26,56 @@
   .admin-modal-card {
     padding: 1rem;
   }
+
+  .admin-rates-calendar {
+    min-width: 0;
+  }
+
+  .admin-rates-toolbar {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .admin-rates-calendar-weekdays,
+  .admin-rates-calendar-grid {
+    gap: 0.4rem;
+  }
+
+  .admin-rates-calendar-weekday {
+    padding: 0.25rem 0.1rem;
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+  }
+
+  .admin-rates-calendar-day {
+    min-height: 5.7rem;
+    padding: 0.45rem;
+    gap: 0.3rem;
+    border-radius: 10px;
+  }
+
+  .admin-rates-calendar-date {
+    font-size: 0.78rem;
+  }
+
+  .admin-rates-calendar-rate {
+    font-size: 0.82rem;
+    line-height: 1.2;
+  }
+
+  .admin-rates-calendar-minimum {
+    font-size: 0.7rem;
+    line-height: 1.15;
+  }
+
+  .admin-rates-month-label {
+    font-size: 1.2rem;
+  }
+
+  .admin-rates-toolbar .button {
+    min-height: 2.8rem;
+    min-width: 2.8rem;
+    padding-inline: 0.75rem;
+  }
 }
 
 @media (min-width: 700px) {

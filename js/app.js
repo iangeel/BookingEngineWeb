@@ -4,7 +4,7 @@ import {
   getBookingStatus,
   initiatePayment,
   updateClientData
-} from "./api.js?v=20260618c";
+} from "./api.js?v=20260624a";
 import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260618c";
 
 const STORAGE_KEY = "aurelia-booking-flow";
@@ -157,6 +157,7 @@ const TRANSLATIONS = {
     noMatchEyebrow: "Nicio camera disponibila",
     noMatchTitle: "Backendul nu a returnat camere disponibile in acest moment.",
     noMatchNote: "Verifica datele din BookingOrchestratorAPI sau inventarul configurat pentru camere.",
+    minimumStayRequired: "Pentru perioada selectata este necesara o rezervare de minimum {count} nopti.",
     availabilityErrorEyebrow: "Disponibilitatea nu poate fi incarcata",
     availabilityErrorTitle: "Nu am putut prelua camerele disponibile acum.",
     availabilityErrorNote: "Te rugam sa incerci din nou in cateva momente.",
@@ -280,6 +281,7 @@ const TRANSLATIONS = {
     noMatchEyebrow: "No rooms available",
     noMatchTitle: "The backend did not return any available rooms right now.",
     noMatchNote: "Check the data in BookingOrchestratorAPI or the configured room inventory.",
+    minimumStayRequired: "For the selected period, a minimum stay of {count} nights is required.",
     availabilityErrorEyebrow: "Availability unavailable",
     availabilityErrorTitle: "We couldn't load available rooms right now.",
     availabilityErrorNote: "Please try again in a few moments.",
@@ -699,6 +701,23 @@ function normalizeRoomName(roomName) {
   return String(roomName || "").replaceAll(/\s+/g, " ").trim();
 }
 
+function getMinimumStayErrorMessage(error) {
+  if (error?.data?.code !== "MINIMUM_STAY_NOT_MET") {
+    return null;
+  }
+
+  const minimumNights = Number(error?.data?.details?.minimumNights);
+  if (!Number.isFinite(minimumNights) || minimumNights < 1) {
+    return null;
+  }
+
+  return t("minimumStayRequired", { count: String(minimumNights) });
+}
+
+function getAvailabilityFeedbackMessage(error) {
+  return getMinimumStayErrorMessage(error) || t("availabilityErrorNote");
+}
+
 function ensureRoomGalleryModal() {
   if (document.getElementById(ROOM_GALLERY_MODAL_ID)) {
     return;
@@ -1060,7 +1079,7 @@ function wireSearchForms() {
           submitButton.disabled = false;
           submitButton.textContent = originalLabel || t("buttonViewAvailability");
         }
-        window.alert(t("availabilityErrorNote"));
+        window.alert(getAvailabilityFeedbackMessage(error));
         console.error("Availability search failed", error);
       }
     });
@@ -1157,12 +1176,23 @@ async function renderRoomsPage() {
         } catch (error) {
           button.disabled = false;
           button.textContent = originalLabel;
-          window.alert(error.message || t("roomSelectionError"));
+          window.alert(getMinimumStayErrorMessage(error) || error.message || t("roomSelectionError"));
           console.error("Room selection failed", error);
         }
       });
     });
   } catch (error) {
+    const minimumStayMessage = getMinimumStayErrorMessage(error);
+
+    if (minimumStayMessage) {
+      roomList.innerHTML = `
+        <article class="surface-card empty-state">
+          <h2>${minimumStayMessage}</h2>
+        </article>
+      `;
+      return;
+    }
+
     roomList.innerHTML = `
       <article class="surface-card empty-state">
         <p class="eyebrow">${t("availabilityErrorEyebrow")}</p>

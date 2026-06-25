@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260610f">
+  <link rel="stylesheet" href="css/styles.css?v=20260624c">
   <link rel="stylesheet" href="css/themes/pursisimpluvama_theme.css">
   <link rel="stylesheet" href="css/responsive.css">
 </head>
@@ -224,6 +224,66 @@
       </div>
     </div>
 
+    <div class="admin-modal admin-modal--rates" data-admin-rates-modal hidden>
+      <div class="admin-modal-backdrop" data-admin-close-rates-modal></div>
+      <div class="admin-modal-card admin-rates-modal-card">
+        <div class="admin-modal-header">
+          <div>
+            <p class="eyebrow" data-admin-i18n="labelRatePeriods">Perioade tarifare</p>
+            <h2 data-admin-rates-modal-title data-admin-i18n="roomRatesTitle">Tarife camera</h2>
+            <div class="admin-rates-room-meta" data-admin-rates-room-meta></div>
+          </div>
+          <button class="admin-modal-close" type="button" data-admin-close-rates-modal aria-label="Close">×</button>
+        </div>
+        <div class="admin-modal-body">
+          <div class="admin-rates-toolbar">
+            <button class="button button-secondary" type="button" data-admin-rates-prev-month>‹</button>
+            <h3 class="admin-rates-month-label" data-admin-rates-month-label></h3>
+            <button class="button button-secondary" type="button" data-admin-rates-next-month>›</button>
+          </div>
+          <div class="admin-rates-legend">
+            <span class="admin-rates-legend-item">
+              <span class="admin-rates-legend-swatch is-base"></span>
+              <span data-admin-i18n="roomRatesLegendBase">Tarif de baza</span>
+            </span>
+            <span class="admin-rates-legend-item">
+              <span class="admin-rates-legend-swatch is-override"></span>
+              <span data-admin-i18n="roomRatesLegendOverride">Perioada tarifara configurata</span>
+            </span>
+          </div>
+          <div class="admin-rates-calendar-wrap">
+            <div class="admin-rates-calendar">
+              <div class="admin-rates-calendar-weekdays" data-admin-rates-weekdays></div>
+              <div class="admin-rates-calendar-grid" data-admin-rates-grid></div>
+            </div>
+          </div>
+          <div class="admin-rates-editor">
+            <p class="note" data-admin-rates-selection-hint></p>
+            <div class="admin-rates-selection-summary" data-admin-rates-selection-summary></div>
+            <form class="admin-form-grid" data-admin-rates-form novalidate>
+              <label>
+                <span class="admin-rates-editor-label">
+                  <input name="updateRatePerNight" type="checkbox">
+                  <span data-admin-i18n="roomRatesUpdateRate">Actualizeaza tariful pe noapte</span>
+                </span>
+                <input name="ratePerNight" type="number" min="0" step="0.01">
+              </label>
+              <label>
+                <span class="admin-rates-editor-label">
+                  <input name="updateMinimumNights" type="checkbox">
+                  <span data-admin-i18n="roomRatesUpdateMinimumNights">Actualizeaza minimum nopti</span>
+                </span>
+                <input name="minimumNights" type="number" min="1" step="1">
+              </label>
+              <div class="admin-inline-actions admin-field-full">
+                <button class="button button-primary" type="submit" data-admin-rates-save data-admin-i18n="buttonSaveRateOverride">Salveaza tarifele</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer class="footer">
       <div>
         <strong data-admin-i18n="brandName">Booking Engine</strong>
@@ -237,6 +297,6 @@
     </footer>
   </div>
 
-  <script type="module" src="js/admin.js?v=20260610e"></script>
+  <script type="module" src="js/admin.js?v=20260624c"></script>
 </body>
 </html>

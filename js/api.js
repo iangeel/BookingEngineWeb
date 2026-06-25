@@ -175,7 +175,10 @@ function normalizeAdminRoomPayload(payload) {
       ? payload.ratePeriods.map((period) => ({
         startDate: period.startDate,
         endDate: period.endDate,
-        ratePerNight: Number(period.ratePerNight)
+        ratePerNight: Number(period.ratePerNight),
+        minimumNights: period.minimumNights === "" || period.minimumNights == null
+          ? null
+          : Number(period.minimumNights)
       }))
       : []
   };
@@ -270,6 +273,32 @@ export async function updateAdminRoom(token, roomId, payload) {
   });
   return {
     endpoint: `${API_BASE_URL}/admin/rooms/${roomId}`,
+    data
+  };
+}
+
+export async function updateAdminRoomRateOverride(token, roomId, payload) {
+  const requestBody = {
+    startDate: payload.startDate,
+    endDate: payload.endDate,
+    updateRatePerNight: Boolean(payload.updateRatePerNight),
+    updateMinimumNights: Boolean(payload.updateMinimumNights)
+  };
+
+  if (payload.ratePerNight !== "" && payload.ratePerNight != null) {
+    requestBody.ratePerNight = Number(payload.ratePerNight);
+  }
+
+  if (payload.minimumNights !== "" && payload.minimumNights != null) {
+    requestBody.minimumNights = Number(payload.minimumNights);
+  }
+
+  const data = await adminRequest(`/admin/rooms/${roomId}/rate-override`, token, {
+    method: "PATCH",
+    body: JSON.stringify(requestBody)
+  });
+  return {
+    endpoint: `${API_BASE_URL}/admin/rooms/${roomId}/rate-override`,
     data
   };
 }
