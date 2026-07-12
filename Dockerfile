@@ -7,6 +7,7 @@ COPY booking.html /usr/share/nginx/html/booking.html
 COPY confirmation.html /usr/share/nginx/html/confirmation.html
 COPY admin.html /usr/share/nginx/html/admin.html
 COPY admin-panel.html /usr/share/nginx/html/admin-panel.html
+COPY admin-calendar.html /usr/share/nginx/html/admin-calendar.html
 COPY css /usr/share/nginx/html/css
 COPY js /usr/share/nginx/html/js
 COPY assets /usr/share/nginx/html/assets
