@@ -32,6 +32,7 @@ const TRANSLATIONS = {
     navPublic: "Frontend public",
     navAdmin: "Administrare",
     navAdminPanel: "Panou administrativ",
+    navAdminCalendar: "Calendar rezervari",
     languageLabel: "Limba",
     loginEyebrow: "Autentificare",
     loginTitle: "Conectare administrator",
@@ -53,6 +54,9 @@ const TRANSLATIONS = {
     sessionUntil: "Expira la {value}",
     buttonRefresh: "Reincarca",
     buttonLogout: "Deconectare",
+    buttonCalendarView: "Calendar view",
+    buttonTableView: "Tabel rezervari",
+    buttonToday: "Astazi",
     buttonCreateRoom: "Creeaza camera",
     buttonCreateBooking: "Creeaza rezervare",
     buttonSaveRoom: "Salveaza camera",
@@ -71,6 +75,24 @@ const TRANSLATIONS = {
     buttonCheckingAvailability: "Se cauta...",
     bookingsEyebrow: "Rezervari",
     bookingsTitle: "Administrare rezervari",
+    calendarEyebrow: "Calendar",
+    calendarTitle: "Calendar rezervari",
+    calendarBoardEmpty: "Nu exista camere configurate pentru afisarea calendarului.",
+    calendarLoading: "Se incarca calendarul...",
+    calendarRoomLabel: "Camera",
+    calendarBookingDetailsEyebrow: "Rezervare",
+    calendarBookingDetailsTitle: "Detalii rezervare",
+    calendarDetailReference: "Nr. rezervare",
+    calendarDetailRooms: "Camere",
+    calendarDetailStay: "Perioada",
+    calendarDetailGuests: "Oaspeti",
+    calendarDetailStatus: "Status",
+    calendarDetailClient: "Client",
+    calendarDetailEmail: "Email",
+    calendarDetailPhone: "Telefon",
+    calendarDetailMentions: "Mentiuni",
+    calendarDetailToken: "Token",
+    calendarDetailUpdated: "Actualizat",
     bookingShowAllLabel: "Afiseaza toate rezervarile",
     bookingSearchLabel: "Cauta rezervare",
     bookingSearchPlaceholder: "Cauta dupa nume, email sau token",
@@ -171,6 +193,7 @@ const TRANSLATIONS = {
     navPublic: "Public frontend",
     navAdmin: "Admin",
     navAdminPanel: "Admin panel",
+    navAdminCalendar: "Booking calendar",
     languageLabel: "Language",
     loginEyebrow: "Authentication",
     loginTitle: "Administrator sign in",
@@ -192,6 +215,9 @@ const TRANSLATIONS = {
     sessionUntil: "Expires at {value}",
     buttonRefresh: "Refresh",
     buttonLogout: "Logout",
+    buttonCalendarView: "Calendar view",
+    buttonTableView: "Bookings table",
+    buttonToday: "Today",
     buttonCreateRoom: "Create room",
     buttonCreateBooking: "Create booking",
     buttonSaveRoom: "Save room",
@@ -210,6 +236,24 @@ const TRANSLATIONS = {
     buttonCheckingAvailability: "Checking...",
     bookingsEyebrow: "Bookings",
     bookingsTitle: "Booking management",
+    calendarEyebrow: "Calendar",
+    calendarTitle: "Booking calendar",
+    calendarBoardEmpty: "There are no configured rooms to display on the calendar.",
+    calendarLoading: "Loading calendar...",
+    calendarRoomLabel: "Room",
+    calendarBookingDetailsEyebrow: "Booking",
+    calendarBookingDetailsTitle: "Booking details",
+    calendarDetailReference: "Book reference",
+    calendarDetailRooms: "Rooms",
+    calendarDetailStay: "Stay",
+    calendarDetailGuests: "Guests",
+    calendarDetailStatus: "Status",
+    calendarDetailClient: "Client",
+    calendarDetailEmail: "Email",
+    calendarDetailPhone: "Phone",
+    calendarDetailMentions: "Notes",
+    calendarDetailToken: "Token",
+    calendarDetailUpdated: "Updated",
     bookingShowAllLabel: "Show all bookings",
     bookingSearchLabel: "Search booking",
     bookingSearchPlaceholder: "Search by name, email, or token",
@@ -314,6 +358,9 @@ const state = {
   bookingSearchTerm: "",
   showAllBookings: false,
   selectedBookingId: null,
+  calendarSelectedBookingId: null,
+  calendarScrollLeft: null,
+  calendarScrollTop: 0,
   editingRoomId: null,
   roomDraft: null,
   viewingRatesRoomId: null,
@@ -350,7 +397,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  if (page === "admin-panel") {
+  if (page === "admin-panel" || page === "admin-calendar") {
     if (!hasAuthToken()) {
       clearAdminAuth();
       window.location.replace("admin.html");
@@ -361,6 +408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     wireRoomModal();
     wireRatesModal();
     wireBookingModal();
+    wireCalendarModal();
     renderPanelState();
     await loadAdminData();
   }
@@ -496,6 +544,10 @@ function applyLanguage() {
     "admin-panel": {
       ro: "Panou administrativ pentru rezervari si camere.",
       en: "Administrative panel for bookings and rooms."
+    },
+    "admin-calendar": {
+      ro: "Calendar administrativ pentru rezervari si ocuparea camerelor.",
+      en: "Administrative booking calendar and room occupancy board."
     }
   };
   const titles = {
@@ -506,6 +558,10 @@ function applyLanguage() {
     "admin-panel": {
       ro: "Panou Administrativ | Booking Engine",
       en: "Admin Panel | Booking Engine"
+    },
+    "admin-calendar": {
+      ro: "Calendar rezervari | Booking Engine",
+      en: "Booking calendar | Booking Engine"
     }
   };
   const page = document.body.dataset.page;
@@ -555,7 +611,7 @@ function wireLoginForm() {
 
       saveAdminAuth(response.data);
       setFeedback(t("loginSuccess"), "success");
-      window.location.replace(buildAdminPanelUrl());
+      window.location.replace(buildAdminPageUrl("admin-panel.html"));
     } catch (error) {
       setFeedback(error.message || t("loadFailed"), "error");
       if (submitButton) {
@@ -579,6 +635,27 @@ function wirePanelActions() {
   if (refreshButton) {
     refreshButton.addEventListener("click", async () => {
       await loadAdminData();
+    });
+  }
+
+  const calendarViewButton = document.querySelector("[data-admin-open-calendar-view]");
+  if (calendarViewButton) {
+    calendarViewButton.addEventListener("click", () => {
+      window.location.href = buildAdminPageUrl("admin-calendar.html");
+    });
+  }
+
+  const tableViewButton = document.querySelector("[data-admin-open-table-view]");
+  if (tableViewButton) {
+    tableViewButton.addEventListener("click", () => {
+      window.location.href = buildAdminPageUrl("admin-panel.html");
+    });
+  }
+
+  const todayButton = document.querySelector("[data-admin-calendar-today]");
+  if (todayButton) {
+    todayButton.addEventListener("click", () => {
+      scrollCalendarToToday("smooth");
     });
   }
 
@@ -660,8 +737,7 @@ function wirePanelActions() {
     searchInput.value = state.bookingSearchTerm;
     searchInput.addEventListener("input", () => {
       state.bookingSearchTerm = searchInput.value.trim();
-      renderBookingsTable();
-      renderSelectedBookingBar();
+      renderPanelState();
     });
   }
 
@@ -670,10 +746,15 @@ function wirePanelActions() {
     showAllBookingsCheckbox.checked = state.showAllBookings;
     showAllBookingsCheckbox.addEventListener("change", () => {
       state.showAllBookings = showAllBookingsCheckbox.checked;
-      renderBookingsTable();
-      renderSelectedBookingBar();
+      renderPanelState();
     });
   }
+}
+
+function wireCalendarModal() {
+  document.querySelectorAll("[data-admin-close-calendar-booking-modal]").forEach((button) => {
+    button.addEventListener("click", closeCalendarBookingModal);
+  });
 }
 
 function wireRoomModal() {
@@ -1116,6 +1197,8 @@ function renderPanelState() {
   renderSessionSummary();
   renderBookingsTable();
   renderSelectedBookingBar();
+  renderCalendarPage();
+  renderCalendarBookingModal();
   renderRoomModal();
   renderRatesModal();
   renderBookingModal();
@@ -1239,11 +1322,226 @@ function renderSelectedBookingBar() {
   `;
 }
 
+function renderCalendarPage() {
+  const container = document.querySelector("[data-admin-calendar-board]");
+  if (!container) {
+    return;
+  }
+
+  const previousScroll = container.querySelector("[data-admin-calendar-scroll]");
+  if (previousScroll) {
+    state.calendarScrollLeft = previousScroll.scrollLeft;
+    state.calendarScrollTop = previousScroll.scrollTop;
+  }
+
+  if (state.loadingRooms || state.loadingBookings) {
+    container.innerHTML = `<div class="empty-state"><p>${t("calendarLoading")}</p></div>`;
+    return;
+  }
+
+  if (!state.rooms.length) {
+    container.innerHTML = `<div class="empty-state"><p>${t("calendarBoardEmpty")}</p></div>`;
+    return;
+  }
+
+  const bookings = getCalendarDisplayBookings();
+  const range = getCalendarBoardRange(bookings);
+  const roomRows = state.rooms.map((room) => renderCalendarRoomRow(room, bookings, range)).join("");
+
+  container.innerHTML = `
+    <div class="admin-calendar-scroll" data-admin-calendar-scroll>
+      <div class="admin-calendar-header-row" style="--admin-calendar-days: ${range.days.length}">
+        <div class="admin-calendar-corner">${escapeHtml(t("calendarRoomLabel"))}</div>
+        <div class="admin-calendar-days-header">
+          ${range.days.map((dateIso) => renderCalendarDayHeader(dateIso)).join("")}
+        </div>
+      </div>
+      ${roomRows}
+    </div>
+  `;
+
+  const scrollNode = container.querySelector("[data-admin-calendar-scroll]");
+  if (scrollNode) {
+    scrollNode.scrollLeft = Number.isFinite(state.calendarScrollLeft) ? state.calendarScrollLeft : 0;
+    scrollNode.scrollTop = Number.isFinite(state.calendarScrollTop) ? state.calendarScrollTop : 0;
+    scrollNode.addEventListener("scroll", () => {
+      state.calendarScrollLeft = scrollNode.scrollLeft;
+      state.calendarScrollTop = scrollNode.scrollTop;
+    });
+
+    if (state.calendarScrollLeft == null) {
+      scrollCalendarToToday("auto");
+    }
+  }
+
+  container.querySelectorAll("[data-admin-calendar-booking-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.calendarSelectedBookingId = button.dataset.adminCalendarBookingId;
+      renderCalendarBookingModal();
+      openModal("calendar-booking");
+    });
+  });
+}
+
+function renderCalendarRoomRow(room, bookings, range) {
+  const roomId = Number(room?.id);
+  const roomBookings = bookings
+    .filter((booking) => getBookingRoomIds(booking).includes(roomId))
+    .sort((left, right) => String(left.startDate || "").localeCompare(String(right.startDate || "")));
+
+  return `
+    <div class="admin-calendar-row" style="--admin-calendar-days: ${range.days.length}">
+      <div class="admin-calendar-room-cell">
+        <strong>${escapeHtml(room.roomNumber || "-")}</strong>
+        <span>${escapeHtml(room.name || "-")}</span>
+      </div>
+      <div class="admin-calendar-track">
+        <div class="admin-calendar-day-columns">
+          ${range.days.map((dateIso) => renderCalendarDayColumn(dateIso)).join("")}
+        </div>
+        ${roomBookings.map((booking) => renderCalendarBookingBar(booking, range)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderCalendarDayHeader(dateIso) {
+  const date = parseLocalDateInput(dateIso);
+  if (!date) {
+    return `<div class="admin-calendar-day-header"></div>`;
+  }
+
+  const isToday = dateIso === getTodayDateString();
+  const isWeekend = isWeekendDate(date);
+  const classNames = [
+    "admin-calendar-day-header",
+    isToday ? "is-today" : "",
+    isWeekend ? "is-weekend" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return `
+    <div class="${classNames}"${isToday ? ' data-admin-calendar-today="true"' : ""}>
+      <span class="admin-calendar-day-weekday">${escapeHtml(date.toLocaleDateString(LOCALES[state.language], { weekday: "short" }))}</span>
+      <strong class="admin-calendar-day-number">${date.getDate()}</strong>
+      <span class="admin-calendar-day-month">${escapeHtml(date.toLocaleDateString(LOCALES[state.language], { month: "short" }))}</span>
+    </div>
+  `;
+}
+
+function renderCalendarDayColumn(dateIso) {
+  const date = parseLocalDateInput(dateIso);
+  const classNames = [
+    "admin-calendar-day-column",
+    dateIso === getTodayDateString() ? "is-today" : "",
+    isWeekendDate(date) ? "is-weekend" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return `<span class="${classNames}"></span>`;
+}
+
+function renderCalendarBookingBar(booking, range) {
+  const startBoundary = getCalendarBookingStartBoundary(booking.startDate, range.startDate);
+  const endBoundary = getCalendarBookingEndBoundary(booking.endDate, range.startDate, range.endDate, range.days.length);
+  const width = endBoundary - startBoundary;
+
+  if (width <= 0) {
+    return "";
+  }
+
+  const title = [
+    formatCalendarBookingLabel(booking),
+    formatStayRange(booking.startDate, booking.endDate),
+    formatBookingRoomNumbers(booking)
+  ]
+    .filter(Boolean)
+    .join(" • ");
+
+  return `
+    <button
+      class="admin-calendar-booking ${escapeHtml(getCalendarBookingClassName(booking.status))}"
+      type="button"
+      data-admin-calendar-booking-id="${escapeHtml(booking.id)}"
+      style="left: calc(var(--admin-calendar-day-width) * ${startBoundary}); width: calc(var(--admin-calendar-day-width) * ${width});"
+      title="${escapeHtml(title)}"
+    >
+      <span>${escapeHtml(formatCalendarBookingLabel(booking))}</span>
+    </button>
+  `;
+}
+
+function renderCalendarBookingModal() {
+  const modal = document.querySelector("[data-admin-calendar-booking-modal]");
+  const detail = document.querySelector("[data-admin-calendar-booking-detail]");
+  if (!modal || !detail) {
+    return;
+  }
+
+  const booking = state.bookings.find((item) => item.id === state.calendarSelectedBookingId);
+  if (!booking) {
+    modal.hidden = true;
+    detail.innerHTML = "";
+    return;
+  }
+
+  detail.innerHTML = `
+    <div class="admin-calendar-booking-summary">
+      <div>
+        <strong>${escapeHtml(formatCalendarBookingLabel(booking))}</strong>
+        <span>${escapeHtml(t("calendarDetailReference"))}: ${escapeHtml(formatBookingReference(booking.id))}</span>
+      </div>
+      <span class="status-pill ${escapeHtml(getBookingStatusClassName(booking.status))}">${escapeHtml(booking.status || "-")}</span>
+    </div>
+    <dl class="admin-calendar-booking-grid">
+      <div>
+        <dt>${escapeHtml(t("calendarDetailRooms"))}</dt>
+        <dd>${escapeHtml(formatBookingRoomNumbers(booking))} · ${escapeHtml(formatBookingRoomTypes(booking))}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailStay"))}</dt>
+        <dd>${escapeHtml(formatStayRange(booking.startDate, booking.endDate))}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailGuests"))}</dt>
+        <dd>${booking.guestCount ?? "-"}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailStatus"))}</dt>
+        <dd>${escapeHtml(booking.status || "-")}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailClient"))}</dt>
+        <dd>${escapeHtml(formatCalendarBookingLabel(booking))}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailEmail"))}</dt>
+        <dd>${booking.clientEmail ? escapeHtml(booking.clientEmail) : "-"}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailPhone"))}</dt>
+        <dd>${booking.clientPhoneNumber ? escapeHtml(booking.clientPhoneNumber) : "-"}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailUpdated"))}</dt>
+        <dd>${escapeHtml(formatDateTime(booking.updatedAt || booking.createdAt))}</dd>
+      </div>
+      <div class="is-full-width">
+        <dt>${escapeHtml(t("calendarDetailMentions"))}</dt>
+        <dd>${booking.mentions ? escapeHtml(booking.mentions) : "-"}</dd>
+      </div>
+      <div class="is-full-width">
+        <dt>${escapeHtml(t("calendarDetailToken"))}</dt>
+        <dd>${booking.token ? escapeHtml(booking.token) : "-"}</dd>
+      </div>
+    </dl>
+  `;
+}
+
 function getFilteredBookings() {
-  const today = getTodayDateString();
-  const baseBookings = state.showAllBookings
-    ? state.bookings
-    : state.bookings.filter((booking) => booking?.endDate && booking.endDate >= today);
+  const baseBookings = getBaseVisibleBookings();
   const query = state.bookingSearchTerm.trim().toLowerCase();
   if (!query) {
     return baseBookings;
@@ -1266,6 +1564,17 @@ function getFilteredBookings() {
   });
 }
 
+function getBaseVisibleBookings() {
+  const today = getTodayDateString();
+  return state.showAllBookings
+    ? state.bookings
+    : state.bookings.filter((booking) => booking?.endDate && booking.endDate >= today);
+}
+
+function getCalendarDisplayBookings() {
+  return getBaseVisibleBookings().filter(blocksCalendarBooking);
+}
+
 function formatBookingReference(bookingId) {
   if (!bookingId) {
     return "-";
@@ -1280,6 +1589,8 @@ function getBookingStatusClassName(status) {
       return "status-confirmed";
     case "PENDING":
       return "status-pending";
+    case "LOCKED":
+      return "status-muted";
     case "FAILED":
       return "status-failed";
     default:
@@ -1712,7 +2023,8 @@ function openModal(type) {
   const selector = {
     room: "[data-admin-room-modal]",
     booking: "[data-admin-booking-modal]",
-    rates: "[data-admin-rates-modal]"
+    rates: "[data-admin-rates-modal]",
+    "calendar-booking": "[data-admin-calendar-booking-modal]"
   }[type];
   const modal = selector ? document.querySelector(selector) : null;
   if (modal) {
@@ -1750,6 +2062,14 @@ function closeRatesModal() {
   state.ratesEditorDraft = null;
   state.savingRatesOverride = false;
   const modal = document.querySelector("[data-admin-rates-modal]");
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+function closeCalendarBookingModal() {
+  state.calendarSelectedBookingId = null;
+  const modal = document.querySelector("[data-admin-calendar-booking-modal]");
   if (modal) {
     modal.hidden = true;
   }
@@ -2174,13 +2494,13 @@ function normalizeAdminAuth(auth) {
   };
 }
 
-function buildAdminPanelUrl() {
+function buildAdminPageUrl(pageName = "admin-panel.html") {
   if (!state.auth?.accessToken) {
-    return "admin-panel.html";
+    return pageName;
   }
 
   const payload = encodeURIComponent(JSON.stringify(state.auth));
-  return `admin-panel.html#${ADMIN_HASH_KEY}=${payload}`;
+  return `${pageName}#${ADMIN_HASH_KEY}=${payload}`;
 }
 
 function readBrowserStorage(storageName, key) {
@@ -2341,12 +2661,143 @@ function startOfMonth(date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
+function endOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
 function addMonths(date, months) {
   return new Date(date.getFullYear(), date.getMonth() + months, 1);
 }
 
 function addDays(date, days) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+}
+
+function getCalendarBoardRange(bookings) {
+  const today = parseLocalDateInput(getTodayDateString()) || new Date();
+  let startDate = startOfMonth(today);
+  if (state.showAllBookings) {
+    const earliestDate = bookings
+      .map((booking) => parseLocalDateInput(booking.startDate))
+      .filter((date) => Number.isFinite(date?.getTime()))
+      .sort((left, right) => left - right)[0];
+
+    if (earliestDate && earliestDate < startDate) {
+      startDate = startOfMonth(earliestDate);
+    }
+  }
+
+  const latestBookingEnd = bookings
+    .map((booking) => parseLocalDateInput(booking.endDate))
+    .filter((date) => Number.isFinite(date?.getTime()))
+    .sort((left, right) => right - left)[0];
+
+  let endDate = endOfMonth(today);
+  const minimumThirtyDayEnd = endOfMonth(addDays(startDate, 29));
+  if (minimumThirtyDayEnd > endDate) {
+    endDate = minimumThirtyDayEnd;
+  }
+  if (latestBookingEnd && latestBookingEnd > endDate) {
+    endDate = endOfMonth(latestBookingEnd);
+  }
+
+  const days = [];
+  for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate = addDays(currentDate, 1)) {
+    days.push(formatLocalDateIso(currentDate));
+  }
+
+  return {
+    startDate: formatLocalDateIso(startDate),
+    endDate: formatLocalDateIso(endDate),
+    days
+  };
+}
+
+function getCalendarBookingStartBoundary(startDateIso, rangeStartIso) {
+  if (!startDateIso || startDateIso <= rangeStartIso) {
+    return 0;
+  }
+
+  return getLocalDateDifferenceInDays(rangeStartIso, startDateIso) + 0.5;
+}
+
+function getCalendarBookingEndBoundary(endDateIso, rangeStartIso, rangeEndIso, totalDays) {
+  if (!endDateIso || endDateIso > rangeEndIso) {
+    return totalDays;
+  }
+
+  return getLocalDateDifferenceInDays(rangeStartIso, endDateIso) + 0.5;
+}
+
+function getCalendarBookingClassName(status) {
+  switch (String(status || "").toUpperCase()) {
+    case "PENDING":
+      return "is-status-pending";
+    case "LOCKED":
+      return "is-status-locked";
+    case "CONFIRMED":
+    default:
+      return "is-status-confirmed";
+  }
+}
+
+function getBookingRoomIds(booking) {
+  const roomIds = Array.isArray(booking?.roomIds)
+    ? booking.roomIds.map((roomId) => Number(roomId)).filter(Number.isFinite)
+    : [];
+
+  if (roomIds.length) {
+    return roomIds;
+  }
+
+  const primaryRoomId = Number(booking?.roomId);
+  return Number.isFinite(primaryRoomId) ? [primaryRoomId] : [];
+}
+
+function formatCalendarBookingLabel(booking) {
+  const fullName = `${booking?.clientFirstName || ""} ${booking?.clientLastName || ""}`.trim();
+  return fullName || booking?.clientEmail || t("fallbackClient");
+}
+
+function blocksCalendarBooking(booking) {
+  return ["LOCKED", "PENDING", "CONFIRMED"].includes(String(booking?.status || "").toUpperCase());
+}
+
+function isWeekendDate(date) {
+  if (!date) {
+    return false;
+  }
+
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+function getLocalDateDifferenceInDays(startIso, endIso) {
+  const startParts = String(startIso || "").split("-").map(Number);
+  const endParts = String(endIso || "").split("-").map(Number);
+  if (startParts.length !== 3 || endParts.length !== 3) {
+    return 0;
+  }
+
+  const startUtc = Date.UTC(startParts[0], startParts[1] - 1, startParts[2]);
+  const endUtc = Date.UTC(endParts[0], endParts[1] - 1, endParts[2]);
+  return Math.round((endUtc - startUtc) / 86400000);
+}
+
+function scrollCalendarToToday(behavior = "smooth") {
+  const scrollNode = document.querySelector("[data-admin-calendar-scroll]");
+  const todayHeader = document.querySelector("[data-admin-calendar-today]");
+  if (!scrollNode || !todayHeader) {
+    return;
+  }
+
+  const stickyColumnWidth = scrollNode.querySelector(".admin-calendar-corner")?.offsetWidth || 0;
+  const targetLeft = Math.max(0, todayHeader.offsetLeft - stickyColumnWidth - 24);
+  scrollNode.scrollTo({
+    left: targetLeft,
+    behavior
+  });
+  state.calendarScrollLeft = targetLeft;
 }
 
 function getMondayBasedDayIndex(date) {
