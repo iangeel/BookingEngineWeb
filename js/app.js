@@ -4,7 +4,7 @@ import {
   getBookingStatus,
   initiatePayment,
   updateClientData
-} from "./api.js?v=20260624a";
+} from "./api.js?v=20260712a";
 import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.js?v=20260618c";
 
 const STORAGE_KEY = "aurelia-booking-flow";
@@ -89,6 +89,10 @@ const PHONE_COUNTRIES = [
   }
 ];
 const DEFAULT_PHONE_COUNTRY = "ro";
+const CLIENT_TYPES = {
+  INDIVIDUAL: "INDIVIDUAL",
+  LEGAL_ENTITY: "LEGAL_ENTITY"
+};
 const TRANSLATIONS = {
   ro: {
     brandName: "Booking Engine",
@@ -114,6 +118,13 @@ const TRANSLATIONS = {
     labelEmail: "Email",
     labelPhoneCountry: "Tara / prefix",
     labelMobilePhoneNumber: "Numar de telefon",
+    labelClientType: "Tip client",
+    clientTypeIndividual: "Persoana fizica",
+    clientTypeLegalEntity: "Persoana juridica",
+    labelCompanyName: "Denumire completa firma",
+    labelCompanyTaxId: "CUI",
+    labelCompanyTradeRegisterNumber: "Numar registrul comertului",
+    labelCompanyRegisteredOffice: "Adresa sediului social",
     labelCity: "Oras",
     labelCountry: "Tara",
     labelState: "Judet",
@@ -238,6 +249,13 @@ const TRANSLATIONS = {
     labelEmail: "Email",
     labelPhoneCountry: "Country / dial code",
     labelMobilePhoneNumber: "Phone number",
+    labelClientType: "Client type",
+    clientTypeIndividual: "Private individual",
+    clientTypeLegalEntity: "Legal entity",
+    labelCompanyName: "Full company name",
+    labelCompanyTaxId: "Tax ID (CUI)",
+    labelCompanyTradeRegisterNumber: "Trade Register number",
+    labelCompanyRegisteredOffice: "Registered office address",
     labelCity: "City",
     labelCountry: "Country",
     labelState: "State",
@@ -1245,6 +1263,7 @@ function renderBookingPage() {
 
   const countrySelect = form.elements.phoneCountry;
   const phoneInput = form.elements.mobilePhoneNumber;
+  const clientTypeInputs = form.querySelectorAll('input[name="clientType"]');
   const initialGuest = {
     ...guestFromBooking(state.booking),
     ...(state.guest || {})
@@ -1261,12 +1280,21 @@ function renderBookingPage() {
   form.elements.firstName.value = initialGuest.firstName || "";
   form.elements.lastName.value = initialGuest.lastName || "";
   form.elements.email.value = initialGuest.email || "";
+  const initialClientType = normalizeClientType(initialGuest.clientType);
+  clientTypeInputs.forEach((input) => {
+    input.checked = input.value === initialClientType;
+  });
+  form.elements.companyName.value = initialGuest.companyName || "";
+  form.elements.companyTaxId.value = initialGuest.companyTaxId || "";
+  form.elements.companyTradeRegisterNumber.value = initialGuest.companyTradeRegisterNumber || "";
+  form.elements.companyRegisteredOffice.value = initialGuest.companyRegisteredOffice || "";
   form.elements.city.value = initialGuest.city || "";
   form.elements.countryName.value = FIXED_COUNTRY_NAME;
   form.elements.state.value = initialGuest.state || "";
   form.elements.postalCode.value = initialGuest.postalCode || "";
   form.elements.addressDetails.value = initialGuest.addressDetails || "";
   phoneInput.value = initialPhoneValue || withPhonePrefix(getPhoneCountry(initialCountry).dial);
+  syncCompanyFields(form);
 
   guestsDisplay.textContent = formatSearchCount(getSelectedRoomCount(room, state.booking, state.stay));
 
@@ -1279,11 +1307,23 @@ function renderBookingPage() {
     persistGuestDraft(form);
   };
 
+  clientTypeInputs.forEach((input) => {
+    input.onchange = () => {
+      syncCompanyFields(form);
+      clearFormFeedback(feedbackNode);
+      persistGuestDraft(form);
+    };
+  });
+
   [
     form.elements.firstName,
     form.elements.lastName,
     form.elements.email,
     phoneInput,
+    form.elements.companyName,
+    form.elements.companyTaxId,
+    form.elements.companyTradeRegisterNumber,
+    form.elements.companyRegisteredOffice,
     form.elements.city,
     form.elements.countryName,
     form.elements.state,
@@ -1320,14 +1360,26 @@ function renderBookingPage() {
       firstName: form.elements.firstName.value.trim(),
       lastName: form.elements.lastName.value.trim(),
       email: form.elements.email.value.trim(),
+      clientType: normalizeClientType(getSelectedClientType(form)),
       phoneCountry: selectedCountry.code,
       mobilePhoneNumber,
+      companyName: form.elements.companyName.value.trim(),
+      companyTaxId: form.elements.companyTaxId.value.trim(),
+      companyTradeRegisterNumber: form.elements.companyTradeRegisterNumber.value.trim(),
+      companyRegisteredOffice: form.elements.companyRegisteredOffice.value.trim(),
       city: form.elements.city.value.trim(),
       countryName: FIXED_COUNTRY_NAME,
       state: form.elements.state.value.trim(),
       postalCode: form.elements.postalCode.value.trim(),
       addressDetails: form.elements.addressDetails.value.trim()
     };
+
+    if (guest.clientType !== CLIENT_TYPES.LEGAL_ENTITY) {
+      guest.companyName = "";
+      guest.companyTaxId = "";
+      guest.companyTradeRegisterNumber = "";
+      guest.companyRegisteredOffice = "";
+    }
 
     state.guest = guest;
     saveState();
@@ -1418,8 +1470,13 @@ function persistGuestDraft(form) {
     firstName: form.elements.firstName.value.trim(),
     lastName: form.elements.lastName.value.trim(),
     email: form.elements.email.value.trim(),
+    clientType: normalizeClientType(getSelectedClientType(form)),
     phoneCountry: form.elements.phoneCountry.value,
     mobilePhoneNumber: form.elements.mobilePhoneNumber.value.trim(),
+    companyName: form.elements.companyName.value.trim(),
+    companyTaxId: form.elements.companyTaxId.value.trim(),
+    companyTradeRegisterNumber: form.elements.companyTradeRegisterNumber.value.trim(),
+    companyRegisteredOffice: form.elements.companyRegisteredOffice.value.trim(),
     city: form.elements.city.value.trim(),
     countryName: FIXED_COUNTRY_NAME,
     state: form.elements.state.value.trim(),
@@ -1645,14 +1702,50 @@ function guestFromBooking(booking) {
     firstName: booking.clientFirstName || "",
     lastName: booking.clientLastName || "",
     email: booking.clientEmail || "",
+    clientType: normalizeClientType(booking.clientType || (booking.clientCompanyName ? CLIENT_TYPES.LEGAL_ENTITY : null)),
     mobilePhoneNumber: booking.clientPhoneNumber || "",
     phoneCountry: detectPhoneCountry(booking.clientPhoneNumber || "") || DEFAULT_PHONE_COUNTRY,
+    companyName: booking.clientCompanyName || "",
+    companyTaxId: booking.clientCompanyTaxId || "",
+    companyTradeRegisterNumber: booking.clientCompanyTradeRegisterNumber || "",
+    companyRegisteredOffice: booking.clientCompanyRegisteredOffice || "",
     city: booking.clientCity || "",
     countryName: booking.clientCountryName || FIXED_COUNTRY_NAME,
     state: booking.clientState || "",
     postalCode: booking.clientPostalCode || "",
     addressDetails: booking.clientAddressDetails || ""
   };
+}
+
+function getSelectedClientType(form) {
+  return form?.querySelector('input[name="clientType"]:checked')?.value || CLIENT_TYPES.INDIVIDUAL;
+}
+
+function normalizeClientType(value) {
+  return value === CLIENT_TYPES.LEGAL_ENTITY ? CLIENT_TYPES.LEGAL_ENTITY : CLIENT_TYPES.INDIVIDUAL;
+}
+
+function syncCompanyFields(form) {
+  const companyFields = form?.querySelector("[data-company-fields]");
+  const isLegalEntity = normalizeClientType(getSelectedClientType(form)) === CLIENT_TYPES.LEGAL_ENTITY;
+
+  if (!companyFields) {
+    return;
+  }
+
+  companyFields.hidden = !isLegalEntity;
+  companyFields.style.display = isLegalEntity ? "" : "none";
+
+  [
+    form.elements.companyName,
+    form.elements.companyTaxId,
+    form.elements.companyTradeRegisterNumber,
+    form.elements.companyRegisteredOffice
+  ].forEach((field) => {
+    if (field) {
+      field.required = isLegalEntity;
+    }
+  });
 }
 
 function syncBookingContextFromUrl() {

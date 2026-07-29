@@ -88,8 +88,20 @@ const TRANSLATIONS = {
     calendarDetailGuests: "Oaspeti",
     calendarDetailStatus: "Status",
     calendarDetailClient: "Client",
+    calendarDetailClientType: "Tip client",
+    calendarDetailClientTypeIndividual: "Persoana fizica",
+    calendarDetailClientTypeLegalEntity: "Persoana juridica",
     calendarDetailEmail: "Email",
     calendarDetailPhone: "Telefon",
+    calendarDetailCompanyName: "Firma",
+    calendarDetailCompanyTaxId: "CUI",
+    calendarDetailCompanyTradeRegisterNumber: "Nr. registrul comertului",
+    calendarDetailCompanyRegisteredOffice: "Sediu social",
+    calendarDetailAddress: "Adresa",
+    calendarDetailCity: "Oras",
+    calendarDetailState: "Judet",
+    calendarDetailPostalCode: "Cod postal",
+    calendarDetailCountry: "Tara",
     calendarDetailMentions: "Mentiuni",
     calendarDetailToken: "Token",
     calendarDetailUpdated: "Actualizat",
@@ -249,8 +261,20 @@ const TRANSLATIONS = {
     calendarDetailGuests: "Guests",
     calendarDetailStatus: "Status",
     calendarDetailClient: "Client",
+    calendarDetailClientType: "Client type",
+    calendarDetailClientTypeIndividual: "Private individual",
+    calendarDetailClientTypeLegalEntity: "Legal entity",
     calendarDetailEmail: "Email",
     calendarDetailPhone: "Phone",
+    calendarDetailCompanyName: "Company",
+    calendarDetailCompanyTaxId: "Tax ID",
+    calendarDetailCompanyTradeRegisterNumber: "Trade Register number",
+    calendarDetailCompanyRegisteredOffice: "Registered office",
+    calendarDetailAddress: "Address",
+    calendarDetailCity: "City",
+    calendarDetailState: "State",
+    calendarDetailPostalCode: "Postal code",
+    calendarDetailCountry: "Country",
     calendarDetailMentions: "Notes",
     calendarDetailToken: "Token",
     calendarDetailUpdated: "Updated",
@@ -1517,6 +1541,10 @@ function renderCalendarBookingModal() {
         <dd>${escapeHtml(formatCalendarBookingLabel(booking))}</dd>
       </div>
       <div>
+        <dt>${escapeHtml(t("calendarDetailClientType"))}</dt>
+        <dd>${escapeHtml(formatCalendarClientType(booking.clientType))}</dd>
+      </div>
+      <div>
         <dt>${escapeHtml(t("calendarDetailEmail"))}</dt>
         <dd>${booking.clientEmail ? escapeHtml(booking.clientEmail) : "-"}</dd>
       </div>
@@ -1524,6 +1552,50 @@ function renderCalendarBookingModal() {
         <dt>${escapeHtml(t("calendarDetailPhone"))}</dt>
         <dd>${booking.clientPhoneNumber ? escapeHtml(booking.clientPhoneNumber) : "-"}</dd>
       </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailCity"))}</dt>
+        <dd>${booking.clientCity ? escapeHtml(booking.clientCity) : "-"}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailState"))}</dt>
+        <dd>${booking.clientState ? escapeHtml(booking.clientState) : "-"}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailPostalCode"))}</dt>
+        <dd>${booking.clientPostalCode ? escapeHtml(booking.clientPostalCode) : "-"}</dd>
+      </div>
+      <div>
+        <dt>${escapeHtml(t("calendarDetailCountry"))}</dt>
+        <dd>${booking.clientCountryName ? escapeHtml(booking.clientCountryName) : "-"}</dd>
+      </div>
+      <div class="is-full-width">
+        <dt>${escapeHtml(t("calendarDetailAddress"))}</dt>
+        <dd>${booking.clientAddressDetails ? escapeHtml(booking.clientAddressDetails) : "-"}</dd>
+      </div>
+      ${booking.clientCompanyName ? `
+      <div>
+        <dt>${escapeHtml(t("calendarDetailCompanyName"))}</dt>
+        <dd>${escapeHtml(booking.clientCompanyName)}</dd>
+      </div>
+      ` : ""}
+      ${booking.clientCompanyTaxId ? `
+      <div>
+        <dt>${escapeHtml(t("calendarDetailCompanyTaxId"))}</dt>
+        <dd>${escapeHtml(booking.clientCompanyTaxId)}</dd>
+      </div>
+      ` : ""}
+      ${booking.clientCompanyTradeRegisterNumber ? `
+      <div>
+        <dt>${escapeHtml(t("calendarDetailCompanyTradeRegisterNumber"))}</dt>
+        <dd>${escapeHtml(booking.clientCompanyTradeRegisterNumber)}</dd>
+      </div>
+      ` : ""}
+      ${booking.clientCompanyRegisteredOffice ? `
+      <div class="is-full-width">
+        <dt>${escapeHtml(t("calendarDetailCompanyRegisteredOffice"))}</dt>
+        <dd>${escapeHtml(booking.clientCompanyRegisteredOffice)}</dd>
+      </div>
+      ` : ""}
       <div>
         <dt>${escapeHtml(t("calendarDetailUpdated"))}</dt>
         <dd>${escapeHtml(formatDateTime(booking.updatedAt || booking.createdAt))}</dd>
@@ -2757,6 +2829,12 @@ function getBookingRoomIds(booking) {
 function formatCalendarBookingLabel(booking) {
   const fullName = `${booking?.clientFirstName || ""} ${booking?.clientLastName || ""}`.trim();
   return fullName || booking?.clientEmail || t("fallbackClient");
+}
+
+function formatCalendarClientType(clientType) {
+  return String(clientType || "").toUpperCase() === "LEGAL_ENTITY"
+    ? t("calendarDetailClientTypeLegalEntity")
+    : t("calendarDetailClientTypeIndividual");
 }
 
 function blocksCalendarBooking(booking) {

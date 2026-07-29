@@ -78,57 +78,41 @@
   }
 
   .admin-calendar-board {
-    --admin-calendar-day-width: 3.45rem;
-    --admin-calendar-room-width: 11.25rem;
-  }
-
-  .admin-calendar-scroll {
-    max-block-size: min(72vh, 34rem);
+    --admin-calendar-day-width: 4.1rem;
+    --admin-calendar-room-column-width: 8.5rem;
   }
 
   .admin-calendar-corner,
-  .admin-calendar-day-header {
-    min-height: 3.65rem;
+  .admin-calendar-room-cell,
+  .admin-calendar-day-header,
+  .admin-calendar-track,
+  .admin-calendar-day-column {
+    min-height: 4rem;
   }
 
-  .admin-calendar-day-header {
-    padding: 0.45rem 0.15rem 0.55rem;
+  .admin-calendar-room-cell {
+    padding: 0.7rem;
   }
 
   .admin-calendar-day-weekday,
   .admin-calendar-day-month {
-    font-size: 0.6rem;
+    font-size: 0.66rem;
   }
 
   .admin-calendar-day-number {
-    font-size: 0.86rem;
-  }
-
-  .admin-calendar-room-cell,
-  .admin-calendar-track {
-    min-height: 3.55rem;
-  }
-
-  .admin-calendar-room-cell {
-    padding: 0.7rem 0.8rem;
-  }
-
-  .admin-calendar-room-cell strong {
-    font-size: 0.92rem;
-  }
-
-  .admin-calendar-room-cell span {
-    font-size: 0.74rem;
+    font-size: 0.9rem;
   }
 
   .admin-calendar-booking {
-    height: 2rem;
-    padding-inline: 0.55rem;
+    top: 0.4rem;
+    height: calc(100% - 0.8rem);
+    min-height: 3.2rem;
+    padding-inline: 0.65rem;
     font-size: 0.72rem;
   }
 
   .admin-calendar-booking-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -209,6 +193,15 @@
     grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.2fr);
   }
 
+  .client-type-grid,
+  .guest-form-company-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guest-form-company-grid .guest-form-company-field-wide {
+    grid-column: 1 / -1;
+  }
+
   .room-gallery-modal__dialog {
     padding: 1.25rem;
   }
@@ -220,10 +213,6 @@
   .admin-form-grid .admin-inline-actions,
   .admin-form-grid .admin-field-full {
     grid-column: 1 / -1;
-  }
-
-  .admin-calendar-board {
-    --admin-calendar-room-width: 13rem;
   }
 
   .admin-room-options-grid {

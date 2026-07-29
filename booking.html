@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260618b">
+  <link rel="stylesheet" href="css/styles.css?v=20260712a">
   <link rel="stylesheet" href="css/themes/pursisimpluvama_theme.css?v=20260527b">
-  <link rel="stylesheet" href="css/responsive.css?v=20260527b">
+  <link rel="stylesheet" href="css/responsive.css?v=20260712a">
 </head>
 <body data-page="booking">
   <div class="site-shell">
@@ -72,6 +72,39 @@
                 <input id="mobilePhoneNumber" name="mobilePhoneNumber" type="tel" autocomplete="tel" inputmode="tel" required>
               </label>
             </div>
+            <div class="guest-form-field-wide">
+              <span class="guest-form-section-label" data-i18n="labelClientType">Tip client</span>
+              <div class="client-type-grid" data-client-type-grid>
+                <label class="client-type-option">
+                  <input name="clientType" type="radio" value="INDIVIDUAL" checked>
+                  <span data-i18n="clientTypeIndividual">Persoana fizica</span>
+                </label>
+                <label class="client-type-option">
+                  <input name="clientType" type="radio" value="LEGAL_ENTITY">
+                  <span data-i18n="clientTypeLegalEntity">Persoana juridica</span>
+                </label>
+              </div>
+            </div>
+            <div class="guest-form-company-fields guest-form-field-wide" data-company-fields hidden>
+              <div class="guest-form-company-grid">
+                <label for="companyName">
+                  <span data-i18n="labelCompanyName">Denumire completa firma</span>
+                  <input id="companyName" name="companyName" type="text" autocomplete="organization">
+                </label>
+                <label for="companyTaxId">
+                  <span data-i18n="labelCompanyTaxId">CUI</span>
+                  <input id="companyTaxId" name="companyTaxId" type="text" autocapitalize="characters">
+                </label>
+                <label for="companyTradeRegisterNumber">
+                  <span data-i18n="labelCompanyTradeRegisterNumber">Numar registrul comertului</span>
+                  <input id="companyTradeRegisterNumber" name="companyTradeRegisterNumber" type="text">
+                </label>
+                <label class="guest-form-company-field-wide" for="companyRegisteredOffice">
+                  <span data-i18n="labelCompanyRegisteredOffice">Adresa sediului social</span>
+                  <input id="companyRegisteredOffice" name="companyRegisteredOffice" type="text" autocomplete="street-address">
+                </label>
+              </div>
+            </div>
             <label for="city">
               <span data-i18n="labelCity">Oras</span>
               <input id="city" name="city" type="text" autocomplete="address-level2" required>
@@ -106,6 +139,6 @@
     <footer class="footer footer-minimal" aria-hidden="true"></footer>
   </div>
 
-  <script type="module" src="js/app.js?v=20260624a"></script>
+  <script type="module" src="js/app.js?v=20260712a"></script>
 </body>
 </html>
