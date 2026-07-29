@@ -37,6 +37,11 @@ function normalizeDate(value) {
   return typeof value === "string" ? value.slice(0, 10) : value;
 }
 
+function normalizeOptionalText(value) {
+  const normalized = typeof value === "string" ? value.trim() : value;
+  return normalized ? normalized : null;
+}
+
 function toFrontendRoom(room, index) {
   return {
     optionId: room.optionId || String(room.id || index),
@@ -109,6 +114,11 @@ export async function updateClientData(bookingId, token, payload) {
       lastName: payload.lastName,
       email: payload.email,
       mobilePhoneNumber: payload.mobilePhoneNumber,
+      clientType: payload.clientType || "INDIVIDUAL",
+      companyName: normalizeOptionalText(payload.companyName),
+      companyTaxId: normalizeOptionalText(payload.companyTaxId),
+      companyTradeRegisterNumber: normalizeOptionalText(payload.companyTradeRegisterNumber),
+      companyRegisteredOffice: normalizeOptionalText(payload.companyRegisteredOffice),
       city: payload.city,
       countryName: payload.countryName,
       state: payload.state,
