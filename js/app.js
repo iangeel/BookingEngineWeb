@@ -9,7 +9,7 @@ import { THEME_BRAND, THEME_SITE_CONTENT } from "./themes/pursisimpluvama_theme.
 
 const STORAGE_KEY = "aurelia-booking-flow";
 const LANGUAGE_KEY = "booking-engine-language";
-const AVAILABILITY_CACHE_VERSION = "20260514d";
+const AVAILABILITY_CACHE_VERSION = "20260729a";
 const DEFAULT_LANGUAGE = "ro";
 const CONFIRMATION_POLL_ATTEMPTS = 6;
 const CONFIRMATION_POLL_DELAY_MS = 2000;
@@ -93,6 +93,12 @@ const CLIENT_TYPES = {
   INDIVIDUAL: "INDIVIDUAL",
   LEGAL_ENTITY: "LEGAL_ENTITY"
 };
+const PUBLIC_BOOKING_SEASON = {
+  startMonth: 5,
+  startDay: 1,
+  lastStayMonth: 9,
+  lastStayDay: 17
+};
 const TRANSLATIONS = {
   ro: {
     brandName: "Booking Engine",
@@ -169,6 +175,7 @@ const TRANSLATIONS = {
     noMatchTitle: "Backendul nu a returnat camere disponibile in acest moment.",
     noMatchNote: "Verifica datele din BookingOrchestratorAPI sau inventarul configurat pentru camere.",
     minimumStayRequired: "Pentru perioada selectata este necesara o rezervare de minimum {count} nopti.",
+    publicSeasonUnavailable: "Rezervarile online sunt disponibile doar pentru sejururi cu check-in intre {seasonStart} si {lastStayDate} si check-out cel tarziu pe {lastCheckoutDate}.",
     availabilityErrorEyebrow: "Disponibilitatea nu poate fi incarcata",
     availabilityErrorTitle: "Nu am putut prelua camerele disponibile acum.",
     availabilityErrorNote: "Te rugam sa incerci din nou in cateva momente.",
@@ -300,6 +307,7 @@ const TRANSLATIONS = {
     noMatchTitle: "The backend did not return any available rooms right now.",
     noMatchNote: "Check the data in BookingOrchestratorAPI or the configured room inventory.",
     minimumStayRequired: "For the selected period, a minimum stay of {count} nights is required.",
+    publicSeasonUnavailable: "Online bookings are available only for stays with check-in between {seasonStart} and {lastStayDate} and checkout no later than {lastCheckoutDate}.",
     availabilityErrorEyebrow: "Availability unavailable",
     availabilityErrorTitle: "We couldn't load available rooms right now.",
     availabilityErrorNote: "Please try again in a few moments.",
@@ -732,8 +740,143 @@ function getMinimumStayErrorMessage(error) {
   return t("minimumStayRequired", { count: String(minimumNights) });
 }
 
+function getPublicSeasonErrorMessage(error) {
+  if (error?.data?.code !== "PUBLIC_BOOKING_SEASON_CLOSED") {
+    return null;
+  }
+
+  const seasonStart = error?.data?.details?.seasonStart;
+  const lastStayDate = error?.data?.details?.lastStayDate;
+  const lastCheckoutDate = error?.data?.details?.lastCheckoutDate;
+  if (!seasonStart || !lastStayDate || !lastCheckoutDate) {
+    return null;
+  }
+
+  return t("publicSeasonUnavailable", {
+    seasonStart: formatLongDate(seasonStart),
+    lastStayDate: formatLongDate(lastStayDate),
+    lastCheckoutDate: formatLongDate(lastCheckoutDate)
+  });
+}
+
 function getAvailabilityFeedbackMessage(error) {
-  return getMinimumStayErrorMessage(error) || t("availabilityErrorNote");
+  return getMinimumStayErrorMessage(error) || getPublicSeasonErrorMessage(error) || t("availabilityErrorNote");
+}
+
+function getPublicSeasonWindowForYear(year) {
+  const seasonStartDate = new Date(year, PUBLIC_BOOKING_SEASON.startMonth - 1, PUBLIC_BOOKING_SEASON.startDay);
+  const lastStayDate = new Date(year, PUBLIC_BOOKING_SEASON.lastStayMonth - 1, PUBLIC_BOOKING_SEASON.lastStayDay);
+  const lastCheckoutDate = addDays(lastStayDate, 1);
+
+  return {
+    seasonStart: formatDate(seasonStartDate),
+    lastStayDate: formatDate(lastStayDate),
+    lastCheckoutDate: formatDate(lastCheckoutDate)
+  };
+}
+
+function getActivePublicSeasonWindow(referenceDate = new Date()) {
+  const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+  const currentSeason = getPublicSeasonWindowForYear(today.getFullYear());
+
+  if (formatDate(today) > currentSeason.lastCheckoutDate) {
+    return getPublicSeasonWindowForYear(today.getFullYear() + 1);
+  }
+
+  return currentSeason;
+}
+
+function getPublicSeasonValidation(checkin, checkout) {
+  if (!checkin || !checkout) {
+    return null;
+  }
+
+  const checkinDate = parseDateValue(checkin);
+  const checkoutDate = parseDateValue(checkout);
+  if (!checkinDate || !checkoutDate) {
+    return null;
+  }
+
+  const seasonWindow = getPublicSeasonWindowForYear(checkinDate.getFullYear());
+  const invalid = checkoutDate.getFullYear() !== checkinDate.getFullYear()
+    || checkin < seasonWindow.seasonStart
+    || checkin > seasonWindow.lastStayDate
+    || checkout > seasonWindow.lastCheckoutDate;
+
+  if (!invalid) {
+    return null;
+  }
+
+  return {
+    ...seasonWindow,
+    message: t("publicSeasonUnavailable", {
+      seasonStart: formatLongDate(seasonWindow.seasonStart),
+      lastStayDate: formatLongDate(seasonWindow.lastStayDate),
+      lastCheckoutDate: formatLongDate(seasonWindow.lastCheckoutDate)
+    })
+  };
+}
+
+function normalizeStayToPublicSeason(stay) {
+  const activeSeason = getActivePublicSeasonWindow(new Date());
+  const today = formatDate(new Date());
+  const minimumCheckin = today > activeSeason.seasonStart ? today : activeSeason.seasonStart;
+  const existingValidation = getPublicSeasonValidation(stay?.checkin, stay?.checkout);
+
+  if (!existingValidation && stay?.checkin && stay?.checkout) {
+    return {
+      checkin: stay.checkin,
+      checkout: stay.checkout
+    };
+  }
+
+  let checkin = formatDate(addDays(new Date(), 39));
+  let checkout = formatDate(addDays(new Date(), 42));
+
+  if (checkin < minimumCheckin) {
+    checkin = minimumCheckin;
+  }
+  if (checkin > activeSeason.lastStayDate) {
+    checkin = activeSeason.lastStayDate;
+  }
+  if (checkout <= checkin || checkout > activeSeason.lastCheckoutDate) {
+    checkout = formatDate(addDays(parseDateValue(checkin), 3));
+  }
+  if (checkout > activeSeason.lastCheckoutDate) {
+    checkout = activeSeason.lastCheckoutDate;
+  }
+  if (checkout <= checkin) {
+    checkout = activeSeason.lastCheckoutDate;
+  }
+
+  return { checkin, checkout };
+}
+
+function syncSearchFormDateConstraints(form) {
+  if (!form?.elements?.checkin || !form?.elements?.checkout) {
+    return;
+  }
+
+  const activeSeason = getActivePublicSeasonWindow(new Date());
+  const today = formatDate(new Date());
+  const minimumCheckin = today > activeSeason.seasonStart ? today : activeSeason.seasonStart;
+  const checkinValue = form.elements.checkin.value || minimumCheckin;
+  const seasonForSelectedYear = getPublicSeasonWindowForYear(
+    parseDateValue(checkinValue)?.getFullYear() || parseDateValue(minimumCheckin).getFullYear()
+  );
+  const minimumCheckout = formatDate(addDays(parseDateValue(checkinValue), 1));
+
+  form.elements.checkin.min = minimumCheckin;
+  form.elements.checkin.max = seasonForSelectedYear.lastStayDate;
+  form.elements.checkout.min = minimumCheckout;
+  form.elements.checkout.max = seasonForSelectedYear.lastCheckoutDate;
+
+  if (form.elements.checkout.value && form.elements.checkout.value < minimumCheckout) {
+    form.elements.checkout.value = minimumCheckout;
+  }
+  if (form.elements.checkout.value && form.elements.checkout.value > seasonForSelectedYear.lastCheckoutDate) {
+    form.elements.checkout.value = seasonForSelectedYear.lastCheckoutDate;
+  }
 }
 
 function ensureRoomGalleryModal() {
@@ -895,13 +1038,11 @@ function saveState() {
 }
 
 function applyDateDefaults() {
-  const now = new Date();
-  const checkin = state.stay.checkin || formatDate(addDays(now, 39));
-  const checkout = state.stay.checkout || formatDate(addDays(now, 42));
+  const normalizedStay = normalizeStayToPublicSeason(state.stay);
   const searchFieldName = getSearchFieldName();
   const searchCount = Number(state.stay?.[searchFieldName]);
-  state.stay.checkin = checkin;
-  state.stay.checkout = checkout;
+  state.stay.checkin = normalizedStay.checkin;
+  state.stay.checkout = normalizedStay.checkout;
   state.stay[searchFieldName] = Number.isFinite(searchCount) && searchCount >= MIN_SEARCH_COUNT
     ? Math.min(searchCount, MAX_SEARCH_COUNT)
     : DEFAULT_SEARCH_COUNT;
@@ -1015,6 +1156,7 @@ function hydrateSearchForms() {
     form.elements.checkin.value = state.stay.checkin;
     form.elements.checkout.value = state.stay.checkout;
     setGuestStepperValue(form, getStaySearchCount(state.stay));
+    syncSearchFormDateConstraints(form);
   });
 
   document.querySelectorAll("[data-stay-summary]").forEach((node) => {
@@ -1062,10 +1204,19 @@ function setGuestStepperValue(form, value) {
 
 function wireSearchForms() {
   document.querySelectorAll("[data-search-form]").forEach((form) => {
+    form.elements.checkin?.addEventListener("change", () => syncSearchFormDateConstraints(form));
+    form.elements.checkout?.addEventListener("change", () => syncSearchFormDateConstraints(form));
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const submitButton = form.querySelector('[type="submit"]');
       const originalLabel = submitButton?.textContent;
+      const seasonValidation = getPublicSeasonValidation(form.elements.checkin.value, form.elements.checkout.value);
+      if (seasonValidation) {
+        window.alert(seasonValidation.message);
+        return;
+      }
+
       state.stay = {
         checkin: form.elements.checkin.value,
         checkout: form.elements.checkout.value,
@@ -1108,6 +1259,16 @@ async function renderRoomsPage() {
   const roomList = document.querySelector("[data-room-list]");
 
   if (!roomList) {
+    return;
+  }
+
+  const localSeasonValidation = getPublicSeasonValidation(state.stay.checkin, state.stay.checkout);
+  if (localSeasonValidation) {
+    roomList.innerHTML = `
+      <article class="surface-card empty-state">
+        <h2>${localSeasonValidation.message}</h2>
+      </article>
+    `;
     return;
   }
 
@@ -1194,18 +1355,28 @@ async function renderRoomsPage() {
         } catch (error) {
           button.disabled = false;
           button.textContent = originalLabel;
-          window.alert(getMinimumStayErrorMessage(error) || error.message || t("roomSelectionError"));
+          window.alert(getMinimumStayErrorMessage(error) || getPublicSeasonErrorMessage(error) || error.message || t("roomSelectionError"));
           console.error("Room selection failed", error);
         }
       });
     });
   } catch (error) {
     const minimumStayMessage = getMinimumStayErrorMessage(error);
+    const publicSeasonMessage = getPublicSeasonErrorMessage(error);
 
     if (minimumStayMessage) {
       roomList.innerHTML = `
         <article class="surface-card empty-state">
           <h2>${minimumStayMessage}</h2>
+        </article>
+      `;
+      return;
+    }
+
+    if (publicSeasonMessage) {
+      roomList.innerHTML = `
+        <article class="surface-card empty-state">
+          <h2>${publicSeasonMessage}</h2>
         </article>
       `;
       return;
@@ -1889,6 +2060,15 @@ function addDays(date, days) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
   return next;
+}
+
+function parseDateValue(value) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(`${value}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function formatDate(date) {
